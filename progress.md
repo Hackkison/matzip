@@ -27,7 +27,7 @@
   - [x] `restaurants` (식당 정보)
   - [x] `reviews` (우리 리뷰)
   - [x] `profiles` (사용자 프로필, auth.users 트리거 연동)
-- [ ] Vercel 연동 + 환경변수 설정
+- [x] Vercel 연동 + 환경변수 설정 (https://matzip-two.vercel.app)
 - [x] GitHub 레포 연결
 
 ---
