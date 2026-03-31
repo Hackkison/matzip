@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>손혁기 · Digiwood</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --g9: #1b4332;
+      --g7: #2d6a4f;
+      --g5: #52b788;
+      --g3: #95d5b2;
+      --g1: #d8f3dc;
+      --g0: #f0faf4;
+      --ink:   #1a1a1a;
+      --ink2:  #4a4a4a;
+      --ink3:  #8a8a8a;
+      --line:  #ebebeb;
+      --bg:    #f8faf9;
+      --card:  #ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(27, 67, 50, 0.96);
+      backdrop-filter: blur(12px);
+    }
+    .nav-wrap {
+      max-width: 1020px; margin: 0 auto;
+      padding: 0 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .nav-logo {
+      font-size: 15px; font-weight: 700;
+      color: #fff; letter-spacing: 2px;
+    }
+    .nav-logo em {
+      font-style: normal;
+      color: var(--g3);
+    }
+    .nav-links {
+      display: flex; gap: 2px;
+    }
+    .nav-links a {
+      font-size: 13px; font-weight: 400;
+      color: rgba(255,255,255,.55);
+      padding: 6px 14px; border-radius: 6px;
+      text-decoration: none;
+      transition: color .15s, background .15s;
+    }
+    .nav-links a:hover { color: #fff; background: rgba(255,255,255,.08); }
+    .nav-links a.active { color: #fff; font-weight: 500; }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--g9);
+      position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 90% 50%, rgba(82,183,136,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 10% 80%, rgba(149,213,178,.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-wrap {
+      position: relative; z-index: 1;
+      max-width: 1020px; margin: 0 auto;
+      padding: 72px 28px 0;
+      display: flex; align-items: flex-end; gap: 40px;
+    }
+
+    /* 아바타 */
+    .hero-avatar {
+      flex-shrink: 0;
+      position: relative;
+      margin-bottom: -28px;
+    }
+    .avatar-circle {
+      width: 116px; height: 116px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--g3) 0%, var(--g5) 45%, var(--g7) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 700;
+      color: var(--g9);
+      letter-spacing: -2px;
+      border: 4px solid rgba(255,255,255,.15);
+      box-shadow: 0 12px 40px rgba(0,0,0,.3);
+    }
+    .status-badge {
+      position: absolute; bottom: 4px; right: 4px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #4ade80;
+      border: 3px solid var(--g9);
+    }
+
+    /* 이름 영역 */
+    .hero-info {
+      padding-bottom: 36px; flex: 1;
+    }
+    .hero-info .name {
+      font-size: 2.4rem; font-weight: 700;
+      color: #fff; letter-spacing: -1px;
+      line-height: 1.15;
+    }
+    .hero-info .sub {
+      margin-top: 8px;
+      font-size: 13px; font-weight: 300;
+      color: rgba(255,255,255,.5);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+    }
+    .hero-chips {
+      display: flex; gap: 7px; flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .chip {
+      font-size: 12px; font-weight: 500;
+      padding: 5px 14px; border-radius: 100px;
+      border: 1px solid rgba(149,213,178,.3);
+      color: rgba(255,255,255,.8);
+      background: rgba(82,183,136,.15);
+      letter-spacing: .3px;
+    }
+
+    /* 탭 */
+    .tabs-wrap {
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+    }
+    .tabs {
+      max-width: 1020px; margin: 0 auto;
+      padding: 0 28px;
+      padding-top: 32px;
+      display: flex;
+    }
+    .tabs button {
+      font-family: inherit;
+      font-size: 13px; font-weight: 500;
+      color: var(--ink3);
+      padding: 12px 18px;
+      border: none; background: none; cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .tabs button.on {
+      color: var(--g7); font-weight: 700;
+      border-bottom-color: var(--g7);
+    }
+    .tabs button:hover { color: var(--g7); }
+
+    /* ── LAYOUT ── */
+    .layout {
+      max-width: 1020px; margin: 32px auto;
+      padding: 0 28px 80px;
+      display: grid;
+      grid-template-columns: 1fr 288px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .card:hover {
+      box-shadow: 0 8px 32px rgba(27,67,50,.08);
+      transform: translateY(-2px);
+    }
+
+    .card-head {
+      padding: 22px 24px 0;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .ci-green { background: var(--g1); }
+    .ci-green svg { fill: var(--g7); }
+    .ci-warm  { background: #fef3c7; }
+    .ci-warm  svg { fill: #92400e; }
+
+    .card-head-text .overline {
+      font-size: 10px; font-weight: 700;
+      color: var(--g5); letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .card-head-text .heading {
+      font-size: 15px; font-weight: 700;
+      color: var(--ink); margin-top: 1px;
+    }
+
+    .card-body { padding: 20px 24px 24px; }
+    .card-divider { height: 1px; background: var(--line); margin: 0 24px; }
+
+    /* ── INFO GRID ── */
+    .info-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .info-cell {
+      padding: 14px 16px;
+      background: var(--g0);
+      border-radius: 10px;
+      border: 1px solid var(--g1);
+    }
+    .info-cell .k {
+      font-size: 10px; font-weight: 700;
+      color: var(--g5); letter-spacing: 1.5px;
+      text-transform: uppercase; margin-bottom: 4px;
+    }
+    .info-cell .v {
+      font-size: 15px; font-weight: 600;
+      color: var(--ink);
+    }
+    .info-cell .v.accent { color: var(--g7); font-size: 17px; }
+
+    /* 소개 문구 */
+    .intro-quote {
+      margin-top: 14px;
+      padding: 16px 18px;
+      background: var(--g0);
+      border-radius: 10px;
+      border-left: 3px solid var(--g5);
+      font-size: 13px; color: var(--ink2);
+      line-height: 1.9;
+    }
+    .intro-quote strong { color: var(--g7); font-weight: 600; }
+
+    /* ── HOBBY ── */
+    .hobby-row {
+      display: flex; gap: 18px; align-items: flex-start;
+    }
+    .ball-box {
+      flex-shrink: 0;
+      width: 72px; height: 72px;
+      border-radius: 12px;
+      background: var(--g0);
+      border: 1px solid var(--g1);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 5px;
+    }
+    .ball {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: radial-gradient(circle at 36% 34%, #fffdf8 0%, #f0ece2 100%);
+      border: 1.5px solid #e0dbd0;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      position: relative;
+    }
+    .ball::before, .ball::after {
+      content: '';
+      position: absolute;
+      border: 1.5px solid #c0392b;
+      border-radius: 50%;
+      width: 12px; height: 24px; top: 8px;
+    }
+    .ball::before { left: 6px;  clip-path: inset(0 50% 0 0); transform: rotate(-16deg); }
+    .ball::after  { right: 6px; clip-path: inset(0 0 0 50%); transform: rotate(16deg); }
+    .ball-lbl { font-size: 9px; font-weight: 600; color: var(--ink3); letter-spacing: .5px; }
+
+    .hobby-text h3 {
+      font-size: 15px; font-weight: 700;
+      color: var(--ink); margin-bottom: 7px;
+    }
+    .hobby-text p {
+      font-size: 13px; color: var(--ink2); line-height: 1.85;
+    }
+    .tags {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .tag {
+      font-size: 11px; font-weight: 500;
+      padding: 3px 10px; border-radius: 100px;
+      background: var(--g1); color: var(--g7);
+      border: 1px solid var(--g3);
+    }
+    .tag-warm {
+      background: #fef3c7; color: #92400e;
+      border-color: #fde68a;
+    }
+
+    /* ── COMPANY ── */
+    .company-row {
+      display: flex; gap: 18px; align-items: flex-start;
+    }
+    .co-mark {
+      flex-shrink: 0; width: 60px; height: 60px;
+      border-radius: 14px;
+      background: var(--g9);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(27,67,50,.2);
+    }
+    .co-mark svg { fill: #fff; }
+    .co-text .co-label {
+      font-size: 10px; font-weight: 700;
+      color: var(--g5); letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 5px;
+    }
+    .co-text h3 {
+      font-size: 15px; font-weight: 700;
+      color: var(--ink); margin-bottom: 8px;
+    }
+    .co-text p {
+      font-size: 13px; color: var(--ink2); line-height: 1.85;
+    }
+
+    /* 카드 하단 메타 */
+    .card-meta {
+      padding: 11px 24px;
+      border-top: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .meta-date { font-size: 11px; color: var(--ink3); }
+    .meta-actions { display: flex; gap: 3px; }
+    .meta-btn {
+      font-size: 12px; color: var(--ink3);
+      padding: 4px 10px; border-radius: 8px;
+      cursor: pointer; border: none; background: none; font-family: inherit;
+      transition: background .12s, color .12s;
+    }
+    .meta-btn:hover { background: var(--g1); color: var(--g7); }
+
+    /* ── SIDEBAR ── */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+    .widget {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    .widget-title {
+      font-size: 11px; font-weight: 700;
+      color: var(--ink3); letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 18px 20px 0;
+    }
+    .widget-body { padding: 12px 20px 18px; }
+
+    /* 프로필 위젯 */
+    .w-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--g3) 0%, var(--g7) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 700; color: #fff;
+      letter-spacing: -1px; margin: 0 auto 10px;
+    }
+    .w-name {
+      text-align: center;
+      font-size: 15px; font-weight: 700; color: var(--ink);
+    }
+    .w-pos {
+      text-align: center;
+      font-size: 12px; color: var(--ink3); margin-top: 3px;
+    }
+    .w-chips {
+      display: flex; justify-content: center; gap: 6px;
+      margin-top: 12px; flex-wrap: wrap;
+    }
+    .w-chip {
+      font-size: 11px; font-weight: 600; padding: 3px 12px;
+      border-radius: 100px; background: var(--g1); color: var(--g7);
+      border: 1px solid var(--g3);
+    }
+    .w-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 4px; margin-top: 16px;
+      padding-top: 16px; border-top: 1px solid var(--line);
+    }
+    .w-stat { text-align: center; }
+    .w-stat .n { font-size: 15px; font-weight: 700; color: var(--g7); }
+    .w-stat .l { font-size: 10px; color: var(--ink3); margin-top: 2px; }
+
+    /* 링크 위젯 */
+    .w-links a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px; color: var(--ink2);
+      text-decoration: none;
+      transition: color .12s;
+    }
+    .w-links a:last-child { border-bottom: none; padding-bottom: 0; }
+    .w-links a:hover { color: var(--g7); }
+    .w-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* 태그 위젯 */
+    .w-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+    .w-tag {
+      font-size: 11px; font-weight: 500;
+      padding: 4px 11px; border-radius: 100px;
+      border: 1px solid var(--line);
+      color: var(--ink2); background: var(--bg);
+      cursor: default; transition: all .12s;
+    }
+    .w-tag:hover { border-color: var(--g3); color: var(--g7); background: var(--g0); }
+    .w-tag.bold { font-weight: 700; color: var(--g7); background: var(--g0); border-color: var(--g3); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--g9);
+      text-align: center; padding: 36px 24px;
+    }
+    .footer-logo {
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 3px; color: #fff; margin-bottom: 10px;
+    }
+    .footer-logo em { font-style: normal; color: var(--g3); }
+    footer p {
+      font-size: 11px; color: rgba(255,255,255,.3);
+      line-height: 2;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 740px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .hero-info .name { font-size: 1.8rem; }
+      .info-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .layout { padding: 0 16px 60px; }
+      .hero-wrap { padding: 48px 16px 0; }
+      .tabs { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-wrap">
+      <span class="nav-logo">DIGI<em>WOOD</em></span>
+      <div class="nav-links">
+        <a href="#" class="active">홈</a>
+        <a href="#">프로필</a>
+        <a href="#">취미</a>
+        <a href="#">회사</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-wrap">
+<div class="hero-info">
+        <div class="name">손혁기</div>
+        <div class="sub">Digiwood · Design Team</div>
+        <div class="hero-chips">
+          <span class="chip">🌿 설계팀</span>
+          <span class="chip">🪵 목재 CNC</span>
+          <span class="chip">⚾ 야구</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TABS -->
+  <div class="tabs-wrap">
+    <div class="tabs">
+      <button class="on">소개</button>
+      <button>취미</button>
+      <button>회사</button>
+      <button>방명록</button>
+    </div>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="layout">
+
+    <!-- FEED -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+      <!-- 기본 정보 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon ci-green">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+            </svg>
+          </div>
+          <div class="card-head-text">
+            <div class="overline">About me</div>
+            <div class="heading">기본 정보</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="info-cell">
+              <div class="k">이름</div>
+              <div class="v accent">손혁기</div>
+            </div>
+            <div class="info-cell">
+              <div class="k">소속</div>
+              <div class="v">디지우드</div>
+            </div>
+            <div class="info-cell">
+              <div class="k">부서</div>
+              <div class="v">설계팀</div>
+            </div>
+            <div class="info-cell">
+              <div class="k">취미</div>
+              <div class="v">야구 ⚾</div>
+            </div>
+          </div>
+          <div class="intro-quote">
+            안녕하세요! 디지우드 설계팀에서 일하고 있는 <strong>손혁기</strong>입니다.<br/>
+            목재 CNC 가공 설계를 담당하며, 나무가 새로운 모습으로 탄생하는 과정을 함께하고 있어요 🌿
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="meta-date">2026.03.24</span>
+          <div class="meta-actions">
+            <button class="meta-btn">🌿 24</button>
+            <button class="meta-btn">💬 3</button>
+            <button class="meta-btn">🔖 저장</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 취미 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon ci-warm">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+          </div>
+          <div class="card-head-text">
+            <div class="overline" style="color:#d97706;">Hobby</div>
+            <div class="heading">제 취미는 야구예요</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="hobby-row">
+            <div class="ball-box">
+              <div class="ball"></div>
+              <span class="ball-lbl">BASEBALL</span>
+            </div>
+            <div class="hobby-text">
+              <h3>⚾ 야구를 좋아합니다</h3>
+              <p>
+                투수의 정밀한 제구와 타자의 순간 판단이 만나는 긴장감을 정말 좋아해요.
+                직접 구장에서 응원하거나 사회인 야구팀에서 뛰며 에너지를 충전합니다 🏟️
+              </p>
+              <div class="tags">
+                <span class="tag">#KBO관람</span>
+                <span class="tag">#사회인야구</span>
+                <span class="tag-warm">#타자</span>
+                <span class="tag">#주말야구</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="meta-date">취미 소개</span>
+          <div class="meta-actions">
+            <button class="meta-btn">⚾ 17</button>
+            <button class="meta-btn">💬 5</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 회사 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon ci-green">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path d="M12 3L2 12h3v9h6v-5h2v5h6v-9h3L12 3z"/>
+            </svg>
+          </div>
+          <div class="card-head-text">
+            <div class="overline">Company</div>
+            <div class="heading">제가 다니는 회사, 디지우드</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="company-row">
+            <div class="co-mark">
+              <svg width="28" height="28" viewBox="0 0 24 24">
+                <path d="M17 12h-3V3H10v9H7l5 5 5-5zM4 19h16v2H4z"/>
+              </svg>
+            </div>
+            <div class="co-text">
+              <div class="co-label">Digiwood · 목재 CNC 정밀가공</div>
+              <h3>디지우드 (DIGIWOOD)</h3>
+              <p>
+                쉽고 재미있는 실용적인 목공키트를 만드는 회사예요.
+                CNC 정밀 가공 기술로 원목을 다양한 제품으로 구현합니다 🪵
+              </p>
+              <div class="tags" style="margin-top:10px;">
+                <span class="tag">#목재CNC</span>
+                <span class="tag">#원목가공</span>
+                <span class="tag">#DIY키트</span>
+                <span class="tag">#주문제작</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="meta-date">회사 소개</span>
+          <div class="meta-actions">
+            <button class="meta-btn">🪵 31</button>
+            <button class="meta-btn">🔗 홈페이지</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="widget">
+        <div class="widget-title">Profile</div>
+        <div class="widget-body">
+          <div class="w-avatar">혁기</div>
+          <div class="w-name">손혁기</div>
+          <div class="w-pos">디지우드 · 설계팀</div>
+          <div class="w-chips">
+            <span class="w-chip">재직중 🌿</span>
+            <span class="w-chip">설계팀</span>
+          </div>
+          <div class="w-stats">
+            <div class="w-stat">
+              <div class="n">3+</div>
+              <div class="l">경력</div>
+            </div>
+            <div class="w-stat">
+              <div class="n">🪵</div>
+              <div class="l">목재</div>
+            </div>
+            <div class="w-stat">
+              <div class="n">⚾</div>
+              <div class="l">야구</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">바로가기</div>
+        <div class="widget-body">
+          <div class="w-links">
+            <a href="#"><span class="w-dot" style="background:var(--g5);"></span>기본 소개</a>
+            <a href="#"><span class="w-dot" style="background:#f59e0b;"></span>취미 — 야구</a>
+            <a href="#"><span class="w-dot" style="background:var(--g7);"></span>디지우드 소개</a>
+            <a href="#"><span class="w-dot" style="background:var(--g3);"></span>방명록 남기기</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">태그</div>
+        <div class="widget-body">
+          <div class="w-tags">
+            <span class="w-tag bold">#손혁기</span>
+            <span class="w-tag bold">#디지우드</span>
+            <span class="w-tag">#설계팀</span>
+            <span class="w-tag">#목재CNC</span>
+            <span class="w-tag">#야구</span>
+            <span class="w-tag">#KBO</span>
+            <span class="w-tag">#사회인야구</span>
+            <span class="w-tag">#원목</span>
+            <span class="w-tag">#DIY</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">DIGI<em>WOOD</em></div>
+    <p>
+      손혁기 · 디지우드 설계팀<br/>
+      © 2026 Digiwood. All rights reserved.
+    </p>
+  </footer>
+
+</body>
+</html>
