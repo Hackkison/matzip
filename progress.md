@@ -19,16 +19,16 @@
 ---
 
 ### Phase 0 — 프로젝트 기반 세팅
-- [ ] Next.js 프로젝트 생성 (App Router)
-- [ ] Tailwind CSS + shadcn/ui 설정
-- [ ] Geist 폰트 적용
-- [ ] Supabase 프로젝트 생성
-- [ ] DB 스키마 설계 및 테이블 생성
-  - [ ] `restaurants` (식당 정보)
-  - [ ] `reviews` (우리 리뷰)
-  - [ ] `users` (사용자)
+- [x] Next.js 프로젝트 생성 (App Router)
+- [x] Tailwind CSS + shadcn/ui 설정
+- [x] Geist 폰트 적용
+- [x] Supabase 프로젝트 생성 (ap-northeast-2, etcemkbhguzcmzzcabxy)
+- [x] DB 스키마 설계 및 테이블 생성
+  - [x] `restaurants` (식당 정보)
+  - [x] `reviews` (우리 리뷰)
+  - [x] `profiles` (사용자 프로필, auth.users 트리거 연동)
 - [ ] Vercel 연동 + 환경변수 설정
-- [ ] GitHub 레포 연결
+- [x] GitHub 레포 연결
 
 ---
 
