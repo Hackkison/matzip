@@ -179,31 +179,34 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
           </div>
 
           {/* 자동완성 */}
-          {showSuggestions && (
+          {showSuggestions && suggestions.length > 0 && (
             <div className="absolute z-10 mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden">
-              {loading && (
-                <div className="px-4 py-3 text-sm text-zinc-400">검색 중...</div>
-              )}
-              {!loading && suggestions.length === 0 && (
-                <div className="px-4 py-3 text-sm text-zinc-400">검색 결과가 없어요</div>
-              )}
-              {!loading &&
-                suggestions.map(place => (
-                  <button
-                    key={place.id}
-                    onClick={() => handleSelect(place)}
-                    className="w-full text-left px-4 py-3 hover:bg-zinc-50 border-b border-zinc-100 last:border-0"
-                  >
-                    <p className="text-sm font-medium text-zinc-800">{place.place_name}</p>
-                    <p className="text-xs text-zinc-400 mt-0.5">
-                      {place.road_address_name || place.address_name}
-                    </p>
-                    <p className="text-xs text-zinc-300 mt-0.5">
-                      {place.category_name.split(' > ').pop()}
-                    </p>
-                  </button>
-                ))}
+              {suggestions.map(place => (
+                <button
+                  key={place.id}
+                  onClick={() => handleSelect(place)}
+                  className="w-full text-left px-4 py-3 hover:bg-zinc-50 border-b border-zinc-100 last:border-0"
+                >
+                  <p className="text-sm font-medium text-zinc-800">{place.place_name}</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    {place.road_address_name || place.address_name}
+                  </p>
+                  <p className="text-xs text-zinc-300 mt-0.5">
+                    {place.category_name.split(' > ').pop()}
+                  </p>
+                </button>
+              ))}
             </div>
+          )}
+
+          {/* 검색 중 / 결과 없음 */}
+          {loading && query.length >= 2 && (
+            <p className="mt-2 text-xs text-zinc-400">검색 중...</p>
+          )}
+          {showSuggestions && !loading && suggestions.length === 0 && (
+            <p className="mt-2 text-xs text-zinc-400">
+              선택한 지역에서 검색 결과가 없어요
+            </p>
           )}
         </div>
 
