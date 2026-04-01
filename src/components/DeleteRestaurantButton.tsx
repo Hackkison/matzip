@@ -7,16 +7,33 @@ import { Trash2 } from 'lucide-react'
 
 interface Props {
   restaurantId: string
+  isAdmin: boolean
 }
 
-export default function DeleteRestaurantButton({ restaurantId }: Props) {
+export default function DeleteRestaurantButton({ restaurantId, isAdmin }: Props) {
   const router = useRouter()
   const supabase = createClient()
   const [deleting, setDeleting] = useState(false)
 
   const handleDelete = async () => {
-    if (!confirm('이 맛집을 삭제할까요?')) return
     setDeleting(true)
+
+    // 일반 사용자: 다른 사용자의 리뷰가 있으면 삭제 불가
+    if (!isAdmin) {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { count } = await supabase
+        .from('reviews')
+        .select('*', { count: 'exact', head: true })
+        .eq('restaurant_id', restaurantId)
+        .neq('user_id', user!.id)
+      if (count && count > 0) {
+        alert('다른 사용자의 리뷰가 있어 삭제할 수 없습니다.')
+        setDeleting(false)
+        return
+      }
+    }
+
+    if (!confirm('이 맛집을 삭제할까요?')) { setDeleting(false); return }
 
     // 리뷰 먼저 삭제 후 맛집 삭제
     await supabase.from('reviews').delete().eq('restaurant_id', restaurantId)

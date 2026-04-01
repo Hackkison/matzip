@@ -82,7 +82,7 @@ export default async function RestaurantDetailPage({ params }: Props) {
         </a>
 
         {/* 삭제 */}
-        {canDelete && <DeleteRestaurantButton restaurantId={id} />}
+        {canDelete && <DeleteRestaurantButton restaurantId={id} isAdmin={isAdmin} />}
 
         {/* 리뷰 */}
         <section>
