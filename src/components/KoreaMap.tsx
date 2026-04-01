@@ -26,14 +26,16 @@ export default function KoreaMap({ onSelect }: Props) {
     fetch('/maps/provinces.json')
       .then((r) => r.json())
       .then((geo) => {
-        // 대륙 기준 projection (울릉도/독도 경도 130° 이상 제외)
+        // 대륙 기준 projection (경도 126°~130° 범위 밖 섬 제외)
         const mainlandGeo = {
           ...geo,
           features: geo.features.map((f: any) => {
             if (f.geometry.type !== 'MultiPolygon') return f
-            const filtered = f.geometry.coordinates.filter(
-              (poly: number[][][]) => Math.max(...poly[0].map((c: number[]) => c[0])) < 130
-            )
+            const filtered = f.geometry.coordinates.filter((poly: number[][][]) => {
+              const lons = poly[0].map((c: number[]) => c[0])
+              return Math.min(...lons) >= 126 && Math.max(...lons) <= 130
+            })
+            if (filtered.length === 0) return f // 전부 제외되면 원본 유지
             if (filtered.length === f.geometry.coordinates.length) return f
             return { ...f, geometry: { ...f.geometry, coordinates: filtered } }
           }),
