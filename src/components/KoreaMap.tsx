@@ -26,7 +26,19 @@ export default function KoreaMap({ onSelect }: Props) {
     fetch('/maps/provinces.json')
       .then((r) => r.json())
       .then((geo) => {
-        const projection = geoMercator().fitExtent([[40, 20], [WIDTH - 40, HEIGHT - 20]], geo)
+        // 대륙 기준 projection (울릉도/독도 경도 130° 이상 제외)
+        const mainlandGeo = {
+          ...geo,
+          features: geo.features.map((f: any) => {
+            if (f.geometry.type !== 'MultiPolygon') return f
+            const filtered = f.geometry.coordinates.filter(
+              (poly: number[][][]) => Math.max(...poly[0].map((c: number[]) => c[0])) < 130
+            )
+            if (filtered.length === f.geometry.coordinates.length) return f
+            return { ...f, geometry: { ...f.geometry, coordinates: filtered } }
+          }),
+        }
+        const projection = geoMercator().fitExtent([[40, 20], [WIDTH - 40, HEIGHT - 20]], mainlandGeo)
         const pathGen = geoPath().projection(projection)
 
         const raw: ProvinceShape[] = geo.features.map((f: any) => {

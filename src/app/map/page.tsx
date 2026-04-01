@@ -42,13 +42,13 @@ export default function MapPage() {
         </Link>
       </header>
 
-      <main className="flex flex-1 flex-col items-center justify-center px-4 py-8 gap-4 md:py-12">
+      <main className="flex flex-1 flex-col items-center justify-center px-4 py-4 gap-2 md:py-6">
         <div className="w-full max-w-sm md:max-w-2xl lg:max-w-4xl flex flex-col items-center gap-2">
           <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-[#1B4332]">맛집 지도</h2>
-          <p className="text-sm md:text-base text-zinc-500 mb-2">시/도를 선택하거나 검색하세요</p>
+          <p className="text-sm md:text-base text-zinc-500 mb-1">시/도를 선택하거나 검색하세요</p>
 
           {/* 검색바 */}
-          <form onSubmit={handleSearch} className="w-full max-w-sm mb-2">
+          <form onSubmit={handleSearch} className="w-full max-w-sm mb-1">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
               <input
