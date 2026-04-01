@@ -121,13 +121,14 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
       .from('restaurants')
       .insert({
         name: selected.place_name,
-        address: selected.road_address_name || selected.address_name,
+        address: selected.address_name,
+        road_address: selected.road_address_name || null,
         category,
         phone: selected.phone || null,
         lat: parseFloat(selected.y),
         lng: parseFloat(selected.x),
         kakao_id: selected.id,
-        user_id: user.id,
+        created_by: user.id,
       })
       .select()
       .single()

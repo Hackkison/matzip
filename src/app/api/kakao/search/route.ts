@@ -12,19 +12,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Kakao API key not configured' }, { status: 500 })
   }
 
-  const baseUrl = 'https://dapi.kakao.com/v2/local/search/keyword.json'
-  const headers = { Authorization: `KakaoAK ${apiKey}` }
+  const url = new URL('https://dapi.kakao.com/v2/local/search/keyword.json')
+  url.searchParams.set('query', query)
+  url.searchParams.set('size', '15')
 
-  const [fd6, ce7] = await Promise.all(
-    ['FD6', 'CE7'].map((code) => {
-      const url = new URL(baseUrl)
-      url.searchParams.set('query', query)
-      url.searchParams.set('category_group_code', code)
-      url.searchParams.set('size', '10')
-      return fetch(url.toString(), { headers }).then((r) => r.json())
-    })
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `KakaoAK ${apiKey}` },
+  })
+
+  const data = await res.json()
+  // 음식 관련 카테고리만 필터링 (FD6: 음식점, CE7: 카페)
+  const documents = (data.documents ?? []).filter(
+    (d: { category_group_code: string }) =>
+      d.category_group_code === 'FD6' || d.category_group_code === 'CE7'
   )
-
-  const documents = [...(fd6.documents ?? []), ...(ce7.documents ?? [])]
   return NextResponse.json({ documents })
 }
