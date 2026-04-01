@@ -78,7 +78,7 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm flex flex-col shadow-xl overflow-hidden">
+      <div className="bg-white rounded-2xl w-full max-w-sm md:max-w-md flex flex-col shadow-xl overflow-hidden">
         {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
           <h2 className="font-semibold text-[#1B4332]">{provinceName}</h2>

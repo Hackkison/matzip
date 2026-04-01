@@ -20,7 +20,7 @@ export default async function RestaurantsPage({ searchParams }: Props) {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4">
+      <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4 md:px-8">
         <Link href="/map" className="text-zinc-400 hover:text-zinc-600">
           <ChevronLeft size={20} />
         </Link>

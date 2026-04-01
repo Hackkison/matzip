@@ -55,7 +55,7 @@ export default function KoreaMap({ onSelect }: Props) {
   return (
     <svg
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      className="w-full max-w-xs mx-auto select-none"
+      className="w-full max-w-xs md:max-w-sm lg:max-w-md mx-auto select-none"
     >
       {provinces.map((p) => (
         <g key={p.code}>
