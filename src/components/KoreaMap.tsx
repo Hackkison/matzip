@@ -43,14 +43,13 @@ export default function KoreaMap({ onSelect }: Props) {
       })
   }, [])
 
-  // 짧은 표시용 이름
+  // 짧은 표시용 이름 (도는 '도' 유지)
   const shortName = (name: string) =>
     name
       .replace('특별자치시', '')
-      .replace('특별자치도', '')
+      .replace('특별자치도', '도')
       .replace('특별시', '')
       .replace('광역시', '')
-      .replace('도', '')
       .trim()
 
   return (

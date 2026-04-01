@@ -8,6 +8,8 @@ interface MunicipalityShape {
   code: string
   name: string
   path: string
+  centroidX: number
+  centroidY: number
 }
 
 const WIDTH = 360
@@ -36,11 +38,16 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
         const projection = geoMercator().fitSize([WIDTH, HEIGHT], geo)
         const pathGen = geoPath().projection(projection)
 
-        const shapes: MunicipalityShape[] = geo.features.map((f: any) => ({
-          code: f.properties.code,
-          name: f.properties.name,
-          path: pathGen(f) ?? '',
-        }))
+        const shapes: MunicipalityShape[] = geo.features.map((f: any) => {
+          const centroid = pathGen.centroid(f)
+          return {
+            code: f.properties.code,
+            name: f.properties.name,
+            path: pathGen(f) ?? '',
+            centroidX: centroid[0],
+            centroidY: centroid[1],
+          }
+        })
         setMunicipalities(shapes)
         setLoading(false)
       })
@@ -112,17 +119,29 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
                 const isSelected = selected.has(m.code)
                 const isHovered = hovered === m.code
                 return (
-                  <path
-                    key={m.code}
-                    d={m.path}
-                    fill={isSelected ? '#1B4332' : isHovered ? '#a3b8a8' : '#e5e5e5'}
-                    stroke="white"
-                    strokeWidth={1}
-                    className="cursor-pointer transition-colors duration-75"
-                    onMouseEnter={() => setHovered(m.code)}
-                    onMouseLeave={() => setHovered(null)}
-                    onClick={() => toggle(m.code)}
-                  />
+                  <g key={m.code}>
+                    <path
+                      d={m.path}
+                      fill={isSelected ? '#1B4332' : isHovered ? '#a3b8a8' : '#e5e5e5'}
+                      stroke="white"
+                      strokeWidth={1}
+                      className="cursor-pointer transition-colors duration-75"
+                      onMouseEnter={() => setHovered(m.code)}
+                      onMouseLeave={() => setHovered(null)}
+                      onClick={() => toggle(m.code)}
+                    />
+                    <text
+                      x={m.centroidX}
+                      y={m.centroidY}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fontSize={7}
+                      fill={isSelected ? 'white' : '#555'}
+                      className="pointer-events-none"
+                    >
+                      {m.name}
+                    </text>
+                  </g>
                 )
               })}
             </svg>
