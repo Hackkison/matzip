@@ -68,6 +68,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
       try {
         const params = new URLSearchParams({ query })
         if (regionNames) params.set('municipalities', regionNames)
+        if (regionCodes) params.set('codes', regionCodes)
         const res = await fetch(`/api/kakao/search?${params.toString()}`)
         const data = await res.json()
         setSuggestions(data.documents ?? [])
