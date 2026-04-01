@@ -19,10 +19,18 @@ export default async function RestaurantsPage({ searchParams }: Props) {
   const { region, name } = await searchParams
   const regionNames = name ? name.split(',') : []
 
-  const { data: restaurants } = await supabase
+  const { data: allRestaurants } = await supabase
     .from('restaurants')
     .select('id, name, category, address, road_address, phone')
     .order('created_at', { ascending: false })
+
+  // 선택한 지역 필터링 (주소에서 공백 제거 후 시/군/구 이름 매칭)
+  const restaurants = regionNames.length > 0
+    ? (allRestaurants ?? []).filter((r) => {
+        const addr = (r.road_address || r.address || '').replace(/\s/g, '')
+        return regionNames.some((rn) => addr.includes(rn))
+      })
+    : allRestaurants
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
