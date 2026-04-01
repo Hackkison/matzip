@@ -21,10 +21,22 @@ export async function GET(request: NextRequest) {
   })
 
   const data = await res.json()
+
   // 음식 관련 카테고리만 필터링 (FD6: 음식점, CE7: 카페)
-  const documents = (data.documents ?? []).filter(
+  let documents = (data.documents ?? []).filter(
     (d: { category_group_code: string }) =>
       d.category_group_code === 'FD6' || d.category_group_code === 'CE7'
   )
+
+  // 선택된 지역으로 필터링 (공백 제거 후 비교)
+  const municipalities = request.nextUrl.searchParams.get('municipalities')
+  if (municipalities) {
+    const regions = municipalities.split(',').filter(Boolean)
+    documents = documents.filter((d: { address_name: string; road_address_name: string }) => {
+      const addr = (d.road_address_name || d.address_name).replace(/\s/g, '')
+      return regions.some((r) => addr.includes(r))
+    })
+  }
+
   return NextResponse.json({ documents })
 }
