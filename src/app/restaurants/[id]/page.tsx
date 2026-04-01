@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, MapPin, Phone, ExternalLink } from 'lucide-react'
 import ReviewList from '@/components/ReviewList'
+import DeleteRestaurantButton from '@/components/DeleteRestaurantButton'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -17,16 +18,21 @@ export default async function RestaurantDetailPage({ params }: Props) {
 
   const { id } = await params
 
-  const [{ data: restaurant }, { data: reviews }] = await Promise.all([
+  const [{ data: restaurant }, { data: reviews }, { data: profile }] = await Promise.all([
     supabase.from('restaurants').select('*').eq('id', id).single(),
     supabase
       .from('reviews')
       .select('id, rating, content, created_at, user_id, profiles(name)')
       .eq('restaurant_id', id)
       .order('created_at', { ascending: false }),
+    supabase.from('profiles').select('is_admin').eq('id', user.id).single(),
   ])
 
   if (!restaurant) notFound()
+
+  const isOwner = restaurant.created_by === user.id
+  const isAdmin = profile?.is_admin === true
+  const canDelete = isOwner || isAdmin
 
   const address = restaurant.road_address || restaurant.address
   const kakaoMapUrl = `https://map.kakao.com/link/map/${encodeURIComponent(restaurant.name)},${restaurant.lat},${restaurant.lng}`
@@ -74,6 +80,9 @@ export default async function RestaurantDetailPage({ params }: Props) {
           <ExternalLink size={14} />
           카카오맵에서 보기
         </a>
+
+        {/* 삭제 */}
+        {canDelete && <DeleteRestaurantButton restaurantId={id} />}
 
         {/* 리뷰 */}
         <section>
