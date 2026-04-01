@@ -33,6 +33,35 @@ interface KakaoPlace {
   y: string
 }
 
+interface GeoFeature {
+  properties: { name: string }
+  geometry: { type: string; coordinates: number[][][][] }
+}
+
+async function computeBbox(regionCodes: string, regionNames: string): Promise<string | null> {
+  if (!regionCodes || !regionNames) return null
+  const provinceCode = regionCodes.split(',')[0].slice(0, 2)
+  const names = regionNames.split(',').filter(Boolean)
+  try {
+    const res = await fetch(`/maps/municipalities/${provinceCode}.json`)
+    const geo = await res.json()
+    const matched = geo.features.filter((f: GeoFeature) => names.includes(f.properties.name))
+    if (!matched.length) return null
+    let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity
+    for (const f of matched) {
+      const polys = f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [f.geometry.coordinates]
+      for (const poly of polys) {
+        for (const coord of poly[0]) {
+          const lon = coord[0] as number, lat = coord[1] as number
+          if (lon < minLon) minLon = lon; if (lon > maxLon) maxLon = lon
+          if (lat < minLat) minLat = lat; if (lat > maxLat) maxLat = lat
+        }
+      }
+    }
+    return `${minLon},${minLat},${maxLon},${maxLat}`
+  } catch { return null }
+}
+
 interface Props {
   regionCodes: string
   regionNames: string
@@ -50,9 +79,14 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
   const [submitting, setSubmitting] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [error, setError] = useState('')
+  const bboxRef = useRef<string | null>(null)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const isSelected = useRef(false)
+
+  useEffect(() => {
+    computeBbox(regionCodes, regionNames).then((bbox) => { bboxRef.current = bbox })
+  }, [regionCodes, regionNames])
 
   useEffect(() => {
     if (isSelected.current) return
@@ -67,8 +101,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
       setLoading(true)
       try {
         const params = new URLSearchParams({ query })
-        if (regionNames) params.set('municipalities', regionNames)
-        if (regionCodes) params.set('codes', regionCodes)
+        if (bboxRef.current) params.set('rect', bboxRef.current)
         const res = await fetch(`/api/kakao/search?${params.toString()}`)
         const data = await res.json()
         setSuggestions(data.documents ?? [])
