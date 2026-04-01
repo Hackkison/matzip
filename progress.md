@@ -41,15 +41,15 @@
 ---
 
 ### Phase 2 — SVG 지도 (지역 선택)
-- [ ] 공식 GeoJSON 데이터 확보 (통계청/국토정보플랫폼)
-- [ ] Mapshaper로 좌표 간소화 + SVG 변환
-- [ ] 전국 시/도 지도 컴포넌트 제작
-- [ ] 시/도 클릭 → 시/군/구 드릴다운 모달
-  - [ ] 시/군/구 단위 SVG 지도 (17개 시/도 전체)
-  - [ ] 클릭 시 선택/해제 토글
-  - [ ] 리스트 뷰 전환 옵션
-  - [ ] 전체선택 + 선택 확정 버튼
-- [ ] 선택 확정 시 맛집 목록으로 이동
+- [x] 공식 GeoJSON 데이터 확보 (southkorea/korea-maps, kostat 2018)
+- [x] 시/도별 municipalities JSON 분리 (lazy-load용, /public/maps/municipalities/{code}.json)
+- [x] 전국 시/도 지도 컴포넌트 제작 (KoreaMap.tsx, d3-geo geoMercator)
+- [x] 시/도 클릭 → 시/군/구 드릴다운 모달
+  - [x] 시/군/구 단위 SVG 지도 (17개 시/도 전체)
+  - [x] 클릭 시 선택/해제 토글
+  - [x] 리스트 뷰 전환 옵션
+  - [x] 전체선택 + 선택 확정 버튼
+- [x] 선택 확정 시 맛집 목록으로 이동 (/restaurants?region=&name=)
 
 ---
 
