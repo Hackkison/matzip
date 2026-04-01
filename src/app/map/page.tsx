@@ -30,8 +30,9 @@ export default function MapPage() {
       </header>
 
       <main className="flex flex-1 flex-col items-center justify-center px-4 py-8 gap-4 md:py-12">
-        <div className="w-full max-w-lg md:max-w-2xl flex flex-col items-center gap-4">
-          <p className="text-sm text-zinc-500">시/도를 선택하세요</p>
+        <div className="w-full max-w-sm md:max-w-2xl lg:max-w-4xl flex flex-col items-center gap-2">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-[#1B4332]">맛집 지도</h2>
+          <p className="text-sm md:text-base text-zinc-500 mb-2">시/도를 선택하세요</p>
           <KoreaMap onSelect={handleProvinceSelect} />
         </div>
       </main>

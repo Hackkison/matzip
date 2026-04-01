@@ -26,19 +26,28 @@ export default function KoreaMap({ onSelect }: Props) {
     fetch('/maps/provinces.json')
       .then((r) => r.json())
       .then((geo) => {
-        const projection = geoMercator().fitSize([WIDTH, HEIGHT], geo)
+        const projection = geoMercator().fitExtent([[40, 20], [WIDTH - 40, HEIGHT - 20]], geo)
         const pathGen = geoPath().projection(projection)
 
-        const shapes: ProvinceShape[] = geo.features.map((f: any) => {
+        const raw: ProvinceShape[] = geo.features.map((f: any) => {
           const centroid = pathGen.centroid(f)
           return {
-            code: f.properties.code,
+            code: String(f.properties.code),
             name: f.properties.name,
             path: pathGen(f) ?? '',
             centroidX: centroid[0],
             centroidY: centroid[1],
           }
         })
+
+        // 세종(29)을 충청남도(34)에 병합
+        const sejong = raw.find((p) => p.code === '29')
+        const chungnam = raw.find((p) => p.code === '34')
+        if (sejong && chungnam) {
+          chungnam.path = chungnam.path + ' ' + sejong.path
+        }
+        const shapes = raw.filter((p) => p.code !== '29')
+
         setProvinces(shapes)
       })
   }, [])
@@ -52,36 +61,53 @@ export default function KoreaMap({ onSelect }: Props) {
       .replace('광역시', '')
       .trim()
 
+  // 특정 시/도 레이블 위치 보정
+  const labelOffset = (code: string): { dx: number; dy: number } => {
+    if (code === '31') return { dx: 0, dy: 20 }   // 경기도 — 서울과 겹침 방지
+    if (code === '33') return { dx: 0, dy: -5 }   // 충청북도
+    if (code === '34') return { dx: -25, dy: 0 }  // 충청남도 — 왼쪽으로
+    return { dx: 0, dy: 0 }
+  }
+
   return (
     <svg
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      className="w-full max-w-xs md:max-w-sm lg:max-w-md mx-auto select-none"
+      className="w-full max-w-xs md:max-w-xl lg:max-w-3xl mx-auto select-none"
+      overflow="visible"
     >
+      {/* 1패스: path 전체 먼저 렌더 */}
       {provinces.map((p) => (
-        <g key={p.code}>
-          <path
-            d={p.path}
-            fill={hovered === p.code ? '#1B4332' : '#d4d4d4'}
-            stroke="white"
-            strokeWidth={1.5}
-            className="cursor-pointer transition-colors duration-100"
-            onMouseEnter={() => setHovered(p.code)}
-            onMouseLeave={() => setHovered(null)}
-            onClick={() => onSelect(p.code, p.name)}
-          />
+        <path
+          key={p.code}
+          d={p.path}
+          fill={hovered === p.code ? '#1B4332' : '#d4d4d4'}
+          stroke="white"
+          strokeWidth={1.5}
+          className="cursor-pointer transition-colors duration-100"
+          onMouseEnter={() => setHovered(p.code)}
+          onMouseLeave={() => setHovered(null)}
+          onClick={() => onSelect(p.code, p.name)}
+        />
+      ))}
+      {/* 2패스: text 전체를 path 위에 렌더 */}
+      {provinces.map((p) => {
+        const { dx, dy } = labelOffset(p.code)
+        return (
           <text
-            x={p.centroidX}
-            y={p.centroidY}
+            key={p.code}
+            x={p.centroidX + dx}
+            y={p.centroidY + dy}
             textAnchor="middle"
             dominantBaseline="middle"
-            fontSize={9}
-            fill={hovered === p.code ? 'white' : '#555'}
+            fontSize={11}
+            fontWeight="600"
+            fill={hovered === p.code ? 'white' : '#444'}
             className="pointer-events-none"
           >
             {shortName(p.name)}
           </text>
-        </g>
-      ))}
+        )
+      })}
     </svg>
   )
 }
