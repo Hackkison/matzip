@@ -28,7 +28,8 @@ export default function RestaurantList({ restaurants }: Props) {
   return (
     <div className="flex flex-1 flex-col">
       {/* 카테고리 필터 */}
-      <div className="flex gap-2 overflow-x-auto px-4 py-3 md:px-8 scrollbar-none border-b border-zinc-100">
+      <div className="border-b border-zinc-100">
+        <div className="flex gap-2 overflow-x-auto px-4 py-3 md:px-8 scrollbar-none max-w-3xl mx-auto">
         {CATEGORIES.map((c) => (
           <button
             key={c}
@@ -42,10 +43,11 @@ export default function RestaurantList({ restaurants }: Props) {
             {c}
           </button>
         ))}
+        </div>
       </div>
 
       {/* 목록 */}
-      <div className="flex flex-1 flex-col px-4 py-4 md:px-8 gap-3">
+      <div className="flex flex-1 flex-col px-4 py-4 md:px-8 gap-3 max-w-3xl mx-auto w-full">
         {filtered.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center py-20">
             <p className="text-zinc-400 text-sm">등록된 맛집이 없어요</p>
