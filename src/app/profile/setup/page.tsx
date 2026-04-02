@@ -20,6 +20,19 @@ export default function ProfileSetupPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
+    // 닉네임 중복 체크 (본인 제외)
+    const { count } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('name', nickname.trim())
+      .neq('id', user.id)
+
+    if (count && count > 0) {
+      setError('이미 사용 중인 닉네임입니다.')
+      setLoading(false)
+      return
+    }
+
     const { error } = await supabase
       .from('profiles')
       .update({ name: nickname.trim() })

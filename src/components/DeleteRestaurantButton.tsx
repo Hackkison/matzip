@@ -16,8 +16,6 @@ export default function DeleteRestaurantButton({ restaurantId, isAdmin }: Props)
   const [deleting, setDeleting] = useState(false)
 
   const handleDelete = async () => {
-    setDeleting(true)
-
     // 일반 사용자: 다른 사용자의 리뷰가 있으면 삭제 불가
     if (!isAdmin) {
       const { data: { user } } = await supabase.auth.getUser()
@@ -28,18 +26,17 @@ export default function DeleteRestaurantButton({ restaurantId, isAdmin }: Props)
         .neq('user_id', user!.id)
       if (count && count > 0) {
         alert('다른 사용자의 리뷰가 있어 삭제할 수 없습니다.')
-        setDeleting(false)
         return
       }
     }
 
-    if (!confirm('이 맛집을 삭제할까요?')) { setDeleting(false); return }
+    if (!confirm('이 맛집을 삭제할까요?')) return
+    setDeleting(true)
 
-    // 리뷰 먼저 삭제 후 맛집 삭제
-    await supabase.from('reviews').delete().eq('restaurant_id', restaurantId)
-    const { error } = await supabase.from('restaurants').delete().eq('id', restaurantId)
+    // 서버 API 라우트 호출 (서비스 롤로 RLS 우회 삭제)
+    const res = await fetch(`/api/restaurants/${restaurantId}`, { method: 'DELETE' })
 
-    if (error) {
+    if (!res.ok) {
       alert('삭제 중 오류가 발생했습니다.')
       setDeleting(false)
       return
