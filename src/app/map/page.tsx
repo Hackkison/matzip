@@ -55,7 +55,7 @@ export default function MapPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="맛집 이름으로 검색"
+                placeholder="식당명 또는 지역명으로 검색"
                 className="w-full pl-9 pr-4 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
               />
             </div>
