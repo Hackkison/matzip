@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Script from 'next/script'
 import Link from 'next/link'
-import { ChevronLeft, MapPin } from 'lucide-react'
+import { ChevronLeft, MapPin, LocateFixed } from 'lucide-react'
 
 interface Place {
   id: string
@@ -38,6 +38,8 @@ declare global {
 interface KakaoMap {
   getBounds: () => KakaoBounds
   getCenter: () => object
+  setCenter: (pos: object) => void
+  setLevel: (level: number) => void
 }
 interface KakaoBounds {
   getSouthWest: () => KakaoLatLng
@@ -64,6 +66,8 @@ export default function KakaoMapView() {
   const [places, setPlaces] = useState<Place[]>([])
   const [loading, setLoading] = useState(false)
   const [sdkReady, setSdkReady] = useState(false)
+  const [gpsError, setGpsError] = useState(false)
+  const myMarkerRef = useRef<KakaoMarker | null>(null)
 
   const searchInBounds = useCallback(async () => {
     if (!mapInstanceRef.current) return
@@ -82,6 +86,30 @@ export default function KakaoMapView() {
     }
   }, [])
 
+  const moveToMyLocation = useCallback((lat: number, lng: number) => {
+    if (!mapInstanceRef.current || !window.kakao?.maps) return
+    const pos = new window.kakao.maps.LatLng(lat, lng)
+    mapInstanceRef.current.setCenter(pos)
+    mapInstanceRef.current.setLevel(4)
+
+    // 내 위치 마커
+    if (myMarkerRef.current) myMarkerRef.current.setMap(null)
+    myMarkerRef.current = new window.kakao.maps.Marker({
+      map: mapInstanceRef.current,
+      position: pos,
+      title: '내 위치',
+    })
+  }, [])
+
+  const requestGps = useCallback(() => {
+    if (!navigator.geolocation) { setGpsError(true); return }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => moveToMyLocation(pos.coords.latitude, pos.coords.longitude),
+      () => setGpsError(true),
+      { timeout: 8000 }
+    )
+  }, [moveToMyLocation])
+
   const initMap = useCallback(() => {
     if (!mapRef.current || !window.kakao?.maps) return
 
@@ -93,9 +121,19 @@ export default function KakaoMapView() {
       mapInstanceRef.current = map
 
       window.kakao.maps.event.addListener(map, 'idle', searchInBounds)
-      searchInBounds()
+
+      // GPS로 내 위치 자동 이동
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => moveToMyLocation(pos.coords.latitude, pos.coords.longitude),
+          () => searchInBounds(), // GPS 실패 시 현재 영역 검색
+          { timeout: 8000 }
+        )
+      } else {
+        searchInBounds()
+      }
     })
-  }, [searchInBounds])
+  }, [searchInBounds, moveToMyLocation])
 
   // 마커 업데이트
   useEffect(() => {
@@ -155,7 +193,19 @@ export default function KakaoMapView() {
             : places.length > 0 && <p className="text-xs text-zinc-400">음식점 {places.length}개</p>
           }
         </div>
+        <button
+          onClick={requestGps}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 text-xs text-zinc-600 hover:border-[#1B4332] hover:text-[#1B4332] transition-colors"
+        >
+          <LocateFixed size={14} />
+          내 위치
+        </button>
       </header>
+      {gpsError && (
+        <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 text-xs text-amber-700 text-center">
+          위치 권한이 필요합니다. 브라우저 설정에서 허용해주세요.
+        </div>
+      )}
 
       <div ref={mapRef} className="flex-1 w-full" />
 
