@@ -9,6 +9,13 @@ import Link from 'next/link'
 
 const CATEGORIES = ['한식', '중식', '일식', '양식', '디저트', '기타']
 
+const PRICE_RANGES = [
+  { value: 1, label: '₩', desc: '~1만원' },
+  { value: 2, label: '₩₩', desc: '1~2만원' },
+  { value: 3, label: '₩₩₩', desc: '2~3만원' },
+  { value: 4, label: '₩₩₩₩', desc: '3만원~' },
+]
+
 function mapCategory(kakaoCategory: string): string {
   if (kakaoCategory.includes('한식')) return '한식'
   if (kakaoCategory.includes('중식') || kakaoCategory.includes('중국')) return '중식'
@@ -60,6 +67,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
   const [submitting, setSubmitting] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [error, setError] = useState('')
+  const [priceRange, setPriceRange] = useState<number | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
@@ -107,6 +115,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
     setSelected(null)
     setQuery('')
     setCategory('')
+    setPriceRange(null)
     setSuggestions([])
     setShowSuggestions(false)
     setError('')
@@ -173,6 +182,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
         kakao_id: selected.id,
         created_by: user.id,
         image_url: imageUrl,
+        price_range: priceRange,
       })
       .select()
       .single()
@@ -271,6 +281,28 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
                     }`}
                   >
                     {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-zinc-700 mb-1.5 block">
+                금액대 <span className="text-zinc-400 font-normal">(선택)</span>
+              </label>
+              <div className="flex gap-2">
+                {PRICE_RANGES.map(p => (
+                  <button
+                    key={p.value}
+                    onClick={() => setPriceRange(priceRange === p.value ? null : p.value)}
+                    className={`flex-1 py-2 rounded-lg text-xs border transition-colors flex flex-col items-center gap-0.5 ${
+                      priceRange === p.value
+                        ? 'bg-[#1B4332] text-white border-[#1B4332]'
+                        : 'bg-white text-zinc-600 border-zinc-300 hover:border-[#1B4332]'
+                    }`}
+                  >
+                    <span className="font-medium">{p.label}</span>
+                    <span className="text-[10px] opacity-70">{p.desc}</span>
                   </button>
                 ))}
               </div>

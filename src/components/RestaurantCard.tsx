@@ -1,6 +1,13 @@
 import Link from 'next/link'
 import { MapPin } from 'lucide-react'
 
+const PRICE_LABEL: Record<number, string> = {
+  1: '₩',
+  2: '₩₩',
+  3: '₩₩₩',
+  4: '₩₩₩₩',
+}
+
 interface Restaurant {
   id: string
   name: string
@@ -9,6 +16,7 @@ interface Restaurant {
   road_address: string | null
   phone: string | null
   thumbnail_url: string | null
+  price_range: number | null
 }
 
 interface Props {
@@ -26,9 +34,16 @@ export default function RestaurantCard({ restaurant }: Props) {
       <div className="flex flex-col gap-1.5 flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-semibold text-zinc-800 leading-snug">{restaurant.name}</p>
-          <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#1B4332]/10 text-[#1B4332] text-xs font-medium">
-            {restaurant.category}
-          </span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {restaurant.price_range && (
+              <span className="text-xs text-zinc-400 font-medium">
+                {PRICE_LABEL[restaurant.price_range]}
+              </span>
+            )}
+            <span className="px-2 py-0.5 rounded-full bg-[#1B4332]/10 text-[#1B4332] text-xs font-medium">
+              {restaurant.category}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-1 text-xs text-zinc-400">
           <MapPin size={11} className="shrink-0" />

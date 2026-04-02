@@ -18,7 +18,7 @@ export default async function RestaurantsPage({ searchParams }: Props) {
 
   const { data: allRestaurants } = await supabase
     .from('restaurants')
-    .select('id, name, category, address, road_address, phone, image_url')
+    .select('id, name, category, address, road_address, phone, image_url, price_range')
     .order('created_at', { ascending: false })
 
   // 지역 필터
@@ -52,6 +52,7 @@ export default async function RestaurantsPage({ searchParams }: Props) {
   const restaurants = filtered.map(r => ({
     ...r,
     thumbnail_url: r.image_url ?? reviewThumbnails[r.id] ?? null,
+    price_range: r.price_range ?? null,
   }))
 
   return (
