@@ -16,15 +16,10 @@ export default async function RestaurantsPage({ searchParams }: Props) {
   const { region, name } = await searchParams
   const regionNames = name ? name.split(',') : []
 
-  const [{ data: allRestaurants }, { data: profile }] = await Promise.all([
-    supabase
-      .from('restaurants')
-      .select('id, name, category, address, road_address, phone, image_url')
-      .order('created_at', { ascending: false }),
-    supabase.from('profiles').select('is_admin').eq('id', user.id).single(),
-  ])
-
-  const isAdmin = profile?.is_admin === true
+  const { data: allRestaurants } = await supabase
+    .from('restaurants')
+    .select('id, name, category, address, road_address, phone, image_url')
+    .order('created_at', { ascending: false })
 
   // 지역 필터
   const filtered = regionNames.length > 0
@@ -71,16 +66,13 @@ export default async function RestaurantsPage({ searchParams }: Props) {
             <p className="text-xs text-zinc-400">{regionNames.join(', ')}</p>
           )}
         </div>
-        {/* 관리자만 등록 버튼 표시 */}
-        {isAdmin && (
-          <Link
-            href={`/restaurants/register?region=${region ?? ''}&name=${name ?? ''}`}
-            className="flex items-center gap-1.5 px-3 py-2 bg-[#1B4332] text-white rounded-lg text-sm font-medium"
-          >
-            <Plus size={15} />
-            등록
-          </Link>
-        )}
+        <Link
+          href={`/restaurants/register?region=${region ?? ''}&name=${name ?? ''}`}
+          className="flex items-center gap-1.5 px-3 py-2 bg-[#1B4332] text-white rounded-lg text-sm font-medium"
+        >
+          <Plus size={15} />
+          등록
+        </Link>
       </header>
 
       <RestaurantList restaurants={restaurants} />
