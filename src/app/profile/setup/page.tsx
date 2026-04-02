@@ -2,14 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 
 export default function ProfileSetupPage() {
   const [nickname, setNickname] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,29 +15,15 @@ export default function ProfileSetupPage() {
     setLoading(true)
     setError('')
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/login'); return }
+    const res = await fetch('/api/profile/nickname', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname: nickname.trim() }),
+    })
 
-    // 닉네임 중복 체크 (본인 제외)
-    const { count } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .eq('name', nickname.trim())
-      .neq('id', user.id)
-
-    if (count && count > 0) {
-      setError('이미 사용 중인 닉네임입니다.')
-      setLoading(false)
-      return
-    }
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ name: nickname.trim() })
-      .eq('id', user.id)
-
-    if (error) {
-      setError('닉네임 저장에 실패했습니다.')
+    if (!res.ok) {
+      const data = await res.json()
+      setError(data.error ?? '닉네임 저장에 실패했습니다.')
       setLoading(false)
       return
     }
