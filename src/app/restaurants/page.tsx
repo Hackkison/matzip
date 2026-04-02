@@ -21,7 +21,7 @@ export default async function RestaurantsPage({ searchParams }: Props) {
 
   const { data: allRestaurants } = await supabase
     .from('restaurants')
-    .select('id, name, category, address, road_address, phone')
+    .select('id, name, category, address, road_address, phone, image_url')
     .order('created_at', { ascending: false })
 
   // 선택한 지역 필터링 (주소에서 공백 제거 후 시/군/구 이름 매칭)
