@@ -33,9 +33,8 @@ export async function DELETE(
 
   if (!restaurant) return NextResponse.json({ error: '식당을 찾을 수 없습니다' }, { status: 404 })
 
-  const isOwner = restaurant.created_by === user.id
   const isAdmin = profile?.is_admin === true
-  if (!isOwner && !isAdmin) return NextResponse.json({ error: '권한 없음' }, { status: 403 })
+  if (!isAdmin) return NextResponse.json({ error: '권한 없음' }, { status: 403 })
 
   // 서비스 롤 클라이언트로 삭제 (RLS 우회 — 리뷰 FK 제약 해결)
   const admin = createClient(

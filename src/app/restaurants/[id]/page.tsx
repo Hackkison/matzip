@@ -30,9 +30,8 @@ export default async function RestaurantDetailPage({ params }: Props) {
 
   if (!restaurant) notFound()
 
-  const isOwner = restaurant.created_by === user.id
   const isAdmin = profile?.is_admin === true
-  const canDelete = isOwner || isAdmin
+  const canDelete = isAdmin
 
   const address = restaurant.road_address || restaurant.address
   const kakaoMapUrl = `https://map.kakao.com/link/map/${encodeURIComponent(restaurant.name)},${restaurant.lat},${restaurant.lng}`
@@ -90,7 +89,7 @@ export default async function RestaurantDetailPage({ params }: Props) {
         </a>
 
         {/* 삭제 */}
-        {canDelete && <DeleteRestaurantButton restaurantId={id} isAdmin={isAdmin} />}
+        {canDelete && <DeleteRestaurantButton restaurantId={id} />}
 
         {/* 리뷰 */}
         <section>
