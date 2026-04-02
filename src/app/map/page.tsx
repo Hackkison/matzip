@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { User, Search } from 'lucide-react'
+import { User, Search, Map } from 'lucide-react'
 
 const KoreaMap = dynamic(() => import('@/components/KoreaMap'), { ssr: false })
 const RegionModal = dynamic(() => import('@/components/RegionModal'), { ssr: false })
@@ -37,6 +37,9 @@ export default function MapPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <header className="flex items-center border-b border-zinc-100 px-6 py-4">
         <h1 className="flex-1 text-lg font-semibold text-[#1B4332]">지역 선택</h1>
+        <Link href="/kakaomap" className="text-zinc-400 hover:text-[#1B4332] transition-colors mr-3">
+          <Map size={20} />
+        </Link>
         <Link href="/mypage" className="text-zinc-400 hover:text-[#1B4332] transition-colors">
           <User size={20} />
         </Link>
