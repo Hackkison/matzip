@@ -88,9 +88,6 @@ export default async function RestaurantDetailPage({ params }: Props) {
           카카오맵에서 보기
         </a>
 
-        {/* 삭제 */}
-        {canDelete && <DeleteRestaurantButton restaurantId={id} />}
-
         {/* 리뷰 */}
         <section>
           <ReviewList
@@ -100,6 +97,9 @@ export default async function RestaurantDetailPage({ params }: Props) {
             isAdmin={isAdmin}
           />
         </section>
+
+        {/* 삭제 (관리자) */}
+        {canDelete && <DeleteRestaurantButton restaurantId={id} />}
       </main>
     </div>
   )
