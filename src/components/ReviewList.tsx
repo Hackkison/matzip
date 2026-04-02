@@ -10,6 +10,7 @@ interface Review {
   content: string
   created_at: string
   user_id: string
+  image_urls: string[] | null
   profiles: { name: string | null }[] | { name: string | null } | null
 }
 
@@ -38,7 +39,7 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
   const reload = async () => {
     const { data } = await supabase
       .from('reviews')
-      .select('id, rating, content, created_at, user_id, profiles(name)')
+      .select('id, rating, content, created_at, user_id, image_urls, profiles(name)')
       .eq('restaurant_id', restaurantId)
       .order('created_at', { ascending: false })
     setReviews((data as Review[]) ?? [])
@@ -137,6 +138,20 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
                 )}
               </div>
               <p className="text-sm text-zinc-600 leading-relaxed">{review.content}</p>
+
+              {/* 리뷰 사진 */}
+              {review.image_urls && review.image_urls.length > 0 && (
+                <div className="flex gap-2 flex-wrap mt-1">
+                  {review.image_urls.map((url, idx) => (
+                    <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
+                      className="w-20 h-20 rounded-lg overflow-hidden bg-zinc-100 block shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt={`리뷰 사진 ${idx + 1}`} className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+                    </a>
+                  ))}
+                </div>
+              )}
+
               <p className="text-xs text-zinc-300">
                 {new Date(review.created_at).toLocaleDateString('ko-KR')}
               </p>

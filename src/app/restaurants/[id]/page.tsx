@@ -19,10 +19,10 @@ export default async function RestaurantDetailPage({ params }: Props) {
   const { id } = await params
 
   const [{ data: restaurant }, { data: reviews }, { data: profile }] = await Promise.all([
-    supabase.from('restaurants').select('*').eq('id', id).single(),
+    supabase.from('restaurants').select('*, image_url').eq('id', id).single(),
     supabase
       .from('reviews')
-      .select('id, rating, content, created_at, user_id, profiles(name)')
+      .select('id, rating, content, created_at, user_id, image_urls, profiles(name)')
       .eq('restaurant_id', id)
       .order('created_at', { ascending: false }),
     supabase.from('profiles').select('is_admin').eq('id', user.id).single(),
@@ -62,6 +62,14 @@ export default async function RestaurantDetailPage({ params }: Props) {
       </header>
 
       <main className="flex flex-1 flex-col px-4 py-6 md:px-8 max-w-lg mx-auto w-full gap-6">
+        {/* 대표 사진 */}
+        {restaurant.image_url && (
+          <div className="w-full aspect-video rounded-xl overflow-hidden bg-zinc-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={restaurant.image_url} alt={restaurant.name} className="w-full h-full object-cover" />
+          </div>
+        )}
+
         {/* 기본 정보 */}
         <section className="flex flex-col gap-3">
           <InfoRow icon={<MapPin size={15} />} label="주소" value={address} />

@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { ChevronLeft, Search, X } from 'lucide-react'
+import { resizeToWebP } from '@/lib/image'
+import { ChevronLeft, Search, X, ImagePlus } from 'lucide-react'
 import Link from 'next/link'
 
 const CATEGORIES = ['한식', '중식', '일식', '양식', '디저트', '기타']
@@ -59,9 +60,12 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
   const [submitting, setSubmitting] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [error, setError] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const isSelected = useRef(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (isSelected.current) return
@@ -115,17 +119,45 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
     setError('')
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const handleImageClear = () => {
+    setImageFile(null)
+    if (imagePreview) URL.revokeObjectURL(imagePreview)
+    setImagePreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
   const handleSubmit = async () => {
     if (!selected) return
     setSubmitting(true)
     setError('')
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login')
-      return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { router.push('/login'); return }
+
+    // 대표 사진 업로드 (선택한 경우)
+    let imageUrl: string | null = null
+    if (imageFile) {
+      try {
+        const blob = await resizeToWebP(imageFile)
+        const path = `${user.id}/${Date.now()}.webp`
+        const { error: uploadError } = await supabase.storage
+          .from('restaurant-images')
+          .upload(path, blob, { contentType: 'image/webp', upsert: false })
+        if (uploadError) throw uploadError
+        const { data: urlData } = supabase.storage.from('restaurant-images').getPublicUrl(path)
+        imageUrl = urlData.publicUrl
+      } catch {
+        setError('사진 업로드에 실패했습니다.')
+        setSubmitting(false)
+        return
+      }
     }
 
     const { data, error } = await supabase
@@ -140,6 +172,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
         lng: parseFloat(selected.x),
         kakao_id: selected.id,
         created_by: user.id,
+        image_url: imageUrl,
       })
       .select()
       .single()
@@ -208,7 +241,6 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
             </div>
           )}
 
-          {/* 검색 중 / 결과 없음 */}
           {loading && query.length >= 2 && (
             <p className="mt-2 text-xs text-zinc-400">검색 중...</p>
           )}
@@ -242,6 +274,41 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* 대표 사진 (선택) */}
+            <div>
+              <label className="text-sm font-medium text-zinc-700 mb-1.5 block">
+                대표 사진 <span className="text-zinc-400 font-normal">(선택)</span>
+              </label>
+              {imagePreview ? (
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-zinc-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagePreview} alt="미리보기" className="w-full h-full object-cover" />
+                  <button
+                    onClick={handleImageClear}
+                    className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center justify-center gap-2 w-full py-8 border border-dashed border-zinc-300 rounded-lg text-sm text-zinc-400 hover:border-[#1B4332] hover:text-[#1B4332] transition-colors"
+                >
+                  <ImagePlus size={18} />
+                  사진 추가
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
             </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}
