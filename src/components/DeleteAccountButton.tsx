@@ -20,12 +20,15 @@ export default function DeleteAccountButton() {
   }
 
   return (
-    <button
-      onClick={handleDelete}
-      disabled={loading}
-      className="text-xs text-zinc-400 hover:text-red-500 transition-colors disabled:opacity-40"
-    >
-      {loading ? '처리 중...' : '회원 탈퇴'}
-    </button>
+    <div className="flex flex-col gap-2">
+      <p className="text-xs text-zinc-400">탈퇴 시 작성한 리뷰는 익명으로 유지됩니다.</p>
+      <button
+        onClick={handleDelete}
+        disabled={loading}
+        className="w-full py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-40"
+      >
+        {loading ? '처리 중...' : '회원 탈퇴'}
+      </button>
+    </div>
   )
 }
