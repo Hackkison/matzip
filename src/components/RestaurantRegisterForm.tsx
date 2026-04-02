@@ -68,6 +68,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [error, setError] = useState('')
   const [priceRange, setPriceRange] = useState<number | null>(null)
+  const [duplicateId, setDuplicateId] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
@@ -101,13 +102,22 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
     return () => clearTimeout(debounceRef.current)
   }, [query])
 
-  const handleSelect = (place: KakaoPlace) => {
+  const handleSelect = async (place: KakaoPlace) => {
     isSelected.current = true
     setSelected(place)
     setQuery(place.place_name)
     setCategory(mapCategory(place.category_name))
     setSuggestions([])
     setShowSuggestions(false)
+    setDuplicateId(null)
+
+    // 중복 체크
+    const { data } = await supabase
+      .from('restaurants')
+      .select('id')
+      .eq('kakao_id', place.id)
+      .single()
+    if (data) setDuplicateId(data.id)
   }
 
   const handleClear = () => {
@@ -116,6 +126,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
     setQuery('')
     setCategory('')
     setPriceRange(null)
+    setDuplicateId(null)
     setSuggestions([])
     setShowSuggestions(false)
     setError('')
@@ -261,8 +272,21 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
           )}
         </div>
 
+        {/* 중복 등록 안내 */}
+        {duplicateId && (
+          <div className="flex items-center justify-between px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-700">이미 등록된 맛집이에요</p>
+            <Link
+              href={`/restaurants/${duplicateId}`}
+              className="text-sm font-medium text-amber-700 underline"
+            >
+              맛집 보기
+            </Link>
+          </div>
+        )}
+
         {/* 선택된 가게 정보 */}
-        {selected && (
+        {selected && !duplicateId && (
           <>
             <Field label="주소" value={selected.road_address_name || selected.address_name} />
             <Field label="전화번호" value={selected.phone || '정보 없음'} />
