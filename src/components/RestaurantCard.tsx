@@ -8,7 +8,7 @@ interface Restaurant {
   address: string
   road_address: string | null
   phone: string | null
-  image_url: string | null
+  thumbnail_url: string | null
 }
 
 interface Props {
@@ -36,12 +36,12 @@ export default function RestaurantCard({ restaurant }: Props) {
         </div>
       </div>
 
-      {/* 사진 있을 때만 썸네일 표시 */}
-      {restaurant.image_url && (
+      {/* 대표 사진 또는 최신 리뷰 사진 썸네일 */}
+      {restaurant.thumbnail_url && (
         <div className="shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-zinc-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={restaurant.image_url}
+            src={restaurant.thumbnail_url}
             alt={restaurant.name}
             className="w-full h-full object-cover"
           />

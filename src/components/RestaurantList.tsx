@@ -12,7 +12,7 @@ interface Restaurant {
   address: string
   road_address: string | null
   phone: string | null
-  image_url: string | null
+  thumbnail_url: string | null
 }
 
 interface Props {
