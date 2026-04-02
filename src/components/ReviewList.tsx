@@ -19,6 +19,7 @@ interface Props {
   restaurantId: string
   initialReviews: Review[]
   currentUserId: string
+  isAdmin?: boolean
 }
 
 function Stars({ rating }: { rating: number }) {
@@ -31,7 +32,7 @@ function Stars({ rating }: { rating: number }) {
   )
 }
 
-export default function ReviewList({ restaurantId, initialReviews, currentUserId }: Props) {
+export default function ReviewList({ restaurantId, initialReviews, currentUserId, isAdmin }: Props) {
   const supabase = createClient()
   const [reviews, setReviews] = useState(initialReviews)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -48,10 +49,15 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
     setEditingId(null)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (reviewId: string, isOthers: boolean) => {
     if (!confirm('리뷰를 삭제할까요?')) return
-    await supabase.from('reviews').delete().eq('id', id)
-    setReviews((prev) => prev.filter((r) => r.id !== id))
+    if (isOthers) {
+      const res = await fetch(`/api/reviews/${reviewId}`, { method: 'DELETE' })
+      if (!res.ok) { alert('삭제 중 오류가 발생했습니다.'); return }
+    } else {
+      await supabase.from('reviews').delete().eq('id', reviewId)
+    }
+    setReviews((prev) => prev.filter((r) => r.id !== reviewId))
   }
 
   const avgRating =
@@ -125,16 +131,18 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
                   </Link>
                   <Stars rating={review.rating} />
                 </div>
-                {review.user_id === currentUserId && (
+                {(review.user_id === currentUserId || isAdmin) && (
                   <div className="flex gap-2">
+                    {review.user_id === currentUserId && (
+                      <button
+                        onClick={() => setEditingId(review.id)}
+                        className="text-xs text-zinc-400 hover:text-zinc-600"
+                      >
+                        수정
+                      </button>
+                    )}
                     <button
-                      onClick={() => setEditingId(review.id)}
-                      className="text-xs text-zinc-400 hover:text-zinc-600"
-                    >
-                      수정
-                    </button>
-                    <button
-                      onClick={() => handleDelete(review.id)}
+                      onClick={() => handleDelete(review.id, review.user_id !== currentUserId)}
                       className="text-xs text-zinc-400 hover:text-red-500"
                     >
                       삭제

@@ -97,6 +97,7 @@ export default async function RestaurantDetailPage({ params }: Props) {
             restaurantId={id}
             initialReviews={(reviews ?? []) as Parameters<typeof ReviewList>[0]['initialReviews']}
             currentUserId={user.id}
+            isAdmin={isAdmin}
           />
         </section>
       </main>

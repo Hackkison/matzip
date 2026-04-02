@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, MapPin, Star } from 'lucide-react'
 import LogoutButton from '@/components/logout-button'
+import DeleteAccountButton from '@/components/DeleteAccountButton'
 
 export default async function MyPage() {
   const supabase = await createClient()
@@ -121,6 +122,10 @@ export default async function MyPage() {
               })}
             </div>
           )}
+        </section>
+        {/* 회원 탈퇴 */}
+        <section className="border-t border-zinc-100 pt-6">
+          <DeleteAccountButton />
         </section>
       </main>
     </div>
