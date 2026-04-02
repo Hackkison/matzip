@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import Script from 'next/script'
 import Link from 'next/link'
-import { ChevronLeft, MapPin, LocateFixed } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { ChevronLeft, LocateFixed } from 'lucide-react'
 
 interface Place {
   id: string
@@ -58,7 +58,6 @@ interface KakaoInfoWindow {
 }
 
 export default function KakaoMapView() {
-  const router = useRouter()
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<KakaoMap | null>(null)
   const markersRef = useRef<KakaoMarker[]>([])
@@ -68,6 +67,9 @@ export default function KakaoMapView() {
   const [sdkReady, setSdkReady] = useState(false)
   const [gpsError, setGpsError] = useState(false)
   const myMarkerRef = useRef<KakaoMarker | null>(null)
+  const supabase = createClient()
+  // kakao_id → 우리 DB restaurant id 매핑
+  const registeredRef = useRef<Map<string, string>>(new Map())
 
   const searchInBounds = useCallback(async () => {
     if (!mapInstanceRef.current) return
@@ -80,11 +82,26 @@ export default function KakaoMapView() {
     try {
       const res = await fetch(`/api/kakao/search?query=음식점&rect=${rect}`)
       const data = await res.json()
-      setPlaces(data.documents ?? [])
+      const docs: Place[] = data.documents ?? []
+      setPlaces(docs)
+
+      // 우리 DB에 등록된 식당 조회
+      if (docs.length > 0) {
+        const kakaoIds = docs.map(d => d.id)
+        const { data: registered } = await supabase
+          .from('restaurants')
+          .select('id, kakao_id')
+          .in('kakao_id', kakaoIds)
+        const map = new Map<string, string>()
+        for (const r of registered ?? []) {
+          if (r.kakao_id) map.set(r.kakao_id, r.id)
+        }
+        registeredRef.current = map
+      }
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [supabase])
 
   const moveToMyLocation = useCallback((lat: number, lng: number) => {
     if (!mapInstanceRef.current || !window.kakao?.maps) return
@@ -151,12 +168,18 @@ export default function KakaoMapView() {
         title: place.place_name,
       })
 
+      const restaurantId = registeredRef.current.get(place.id)
+      const appLink = restaurantId
+        ? `<a href="/restaurants/${restaurantId}" style="display:block;margin-top:6px;padding:4px 8px;background:#1B4332;color:#fff;font-size:11px;font-weight:600;border-radius:6px;text-align:center;text-decoration:none">리뷰 보러가기</a>`
+        : `<a href="/restaurants/register" style="display:block;margin-top:6px;padding:4px 8px;background:#f5f5f5;color:#52525b;font-size:11px;border-radius:6px;text-align:center;text-decoration:none">맛집 등록하기</a>`
+
       const content = `
         <div style="padding:10px 14px;min-width:160px;font-family:inherit">
           <p style="font-size:13px;font-weight:600;margin:0 0 2px">${place.place_name}</p>
           <p style="font-size:11px;color:#71717a;margin:0 0 2px">${place.category_name.split(' > ').pop()}</p>
-          ${place.phone ? `<p style="font-size:11px;color:#71717a;margin:0">${place.phone}</p>` : ''}
-          <a href="${place.place_url}" target="_blank" style="font-size:11px;color:#1B4332;text-decoration:underline">카카오맵에서 보기</a>
+          ${place.phone ? `<p style="font-size:11px;color:#71717a;margin:0 0 4px">${place.phone}</p>` : ''}
+          ${appLink}
+          <a href="${place.place_url}" target="_blank" style="display:block;margin-top:4px;font-size:10px;color:#a1a1aa;text-align:center">카카오맵에서 보기</a>
         </div>
       `
       const infoWindow = new window.kakao.maps.InfoWindow({ content, removable: true })
