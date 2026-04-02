@@ -19,7 +19,7 @@ export default async function RestaurantDetailPage({ params }: Props) {
   const { id } = await params
 
   const [{ data: restaurant }, { data: reviews }, { data: profile }] = await Promise.all([
-    supabase.from('restaurants').select('*, image_url').eq('id', id).single(),
+    supabase.from('restaurants').select('*').eq('id', id).single(),
     supabase
       .from('reviews')
       .select('id, rating, content, created_at, user_id, image_urls, profiles(name)')
