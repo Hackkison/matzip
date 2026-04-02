@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import ReviewForm from './ReviewForm'
 
@@ -113,11 +114,15 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
             <>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-zinc-700">
+                  <Link
+                    href={`/users/${review.user_id}`}
+                    className="text-xs font-medium text-zinc-700 hover:text-[#1B4332] hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {(Array.isArray(review.profiles)
                       ? review.profiles[0]?.name
                       : review.profiles?.name) ?? '익명'}
-                  </span>
+                  </Link>
                   <Stars rating={review.rating} />
                 </div>
                 {review.user_id === currentUserId && (
