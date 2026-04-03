@@ -33,6 +33,7 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map')
   const [hovered, setHovered] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [confirming, setConfirming] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -166,6 +167,7 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
         names.push(m.name)
       }
     })
+    setConfirming(true)
     onConfirm(codes, names)
   }
 
@@ -323,11 +325,14 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
             <span className="text-sm text-zinc-600">전체선택</span>
           </label>
           <button
-            disabled={selected.size === 0}
+            disabled={selected.size === 0 || confirming}
             onClick={handleConfirm}
-            className="px-5 py-2 rounded-lg bg-[#1B4332] text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-5 py-2 rounded-lg bg-[#1B4332] text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            확정 {selected.size > 0 && `(${selected.size})`}
+            {confirming && (
+              <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            )}
+            {confirming ? '이동 중...' : `확정 ${selected.size > 0 ? `(${selected.size})` : ''}`}
           </button>
         </div>
       </div>

@@ -1,27 +1,22 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Plus } from 'lucide-react'
 import RestaurantList from '@/components/RestaurantList'
+import { Suspense } from 'react'
 
 interface Props {
   searchParams: Promise<{ region?: string; name?: string }>
 }
 
-export default async function RestaurantsPage({ searchParams }: Props) {
+// DB 쿼리를 분리한 비동기 Server Component — Suspense로 스트리밍
+async function RestaurantsFetcher({ regionNames }: { regionNames: string[] }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
-  const { region, name } = await searchParams
-  const regionNames = name ? name.split(',') : []
-
-  let query = supabase
+  let restaurantsQuery = supabase
     .from('restaurants')
     .select('id, name, category, address, road_address, phone, image_url, price_range')
     .order('created_at', { ascending: false })
 
-  // 지역 필터를 DB 쿼리로 처리
   if (regionNames.length > 0) {
     const orFilter = regionNames
       .flatMap((rn) => [
@@ -29,28 +24,24 @@ export default async function RestaurantsPage({ searchParams }: Props) {
         `address.ilike.%${rn}%`,
       ])
       .join(',')
-    query = query.or(orFilter)
+    restaurantsQuery = restaurantsQuery.or(orFilter)
   }
 
-  const { data: filtered } = await query
-
-  // 대표 사진 없는 식당: 최신 리뷰 사진을 썸네일로 사용
-  const noImageIds = (filtered ?? []).filter(r => !r.image_url).map(r => r.id)
-  const reviewThumbnails: Record<string, string> = {}
-
-  if (noImageIds.length > 0) {
-    const { data: reviews } = await supabase
+  // 식당 쿼리 + 리뷰 썸네일 쿼리 병렬 실행
+  const [{ data: filtered }, { data: reviews }] = await Promise.all([
+    restaurantsQuery,
+    supabase
       .from('reviews')
       .select('restaurant_id, image_urls')
-      .in('restaurant_id', noImageIds)
       .not('image_urls', 'is', null)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }),
+  ])
 
-    // restaurant_id당 가장 최신 리뷰 사진 첫 번째 선택
-    for (const review of (reviews ?? [])) {
-      if (!reviewThumbnails[review.restaurant_id] && review.image_urls?.[0]) {
-        reviewThumbnails[review.restaurant_id] = review.image_urls[0]
-      }
+  // restaurant_id당 가장 최신 리뷰 사진 첫 번째 선택
+  const reviewThumbnails: Record<string, string> = {}
+  for (const review of (reviews ?? [])) {
+    if (!reviewThumbnails[review.restaurant_id] && review.image_urls?.[0]) {
+      reviewThumbnails[review.restaurant_id] = review.image_urls[0]
     }
   }
 
@@ -60,8 +51,35 @@ export default async function RestaurantsPage({ searchParams }: Props) {
     price_range: r.price_range ?? null,
   }))
 
+  return <RestaurantList restaurants={restaurants} />
+}
+
+// 리스트 로딩 중 표시할 스켈레톤
+function ListSkeleton() {
+  return (
+    <div className="px-4 py-4 md:px-8 flex flex-col gap-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="flex gap-3 p-3 rounded-xl border border-zinc-100 animate-pulse">
+          <div className="w-20 h-20 rounded-lg bg-zinc-100 shrink-0" />
+          <div className="flex flex-col gap-2 flex-1 justify-center">
+            <div className="h-4 w-2/5 bg-zinc-100 rounded" />
+            <div className="h-3 w-1/4 bg-zinc-100 rounded" />
+            <div className="h-3 w-3/5 bg-zinc-100 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default async function RestaurantsPage({ searchParams }: Props) {
+  // 인증은 middleware에서 처리 — 여기서 중복 체크 불필요
+  const { region, name } = await searchParams
+  const regionNames = name ? name.split(',') : []
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      {/* 헤더: DB 쿼리와 무관하게 즉시 렌더 */}
       <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4 md:px-8">
         <Link href="/map" className="text-zinc-400 hover:text-zinc-600">
           <ChevronLeft size={20} />
@@ -81,7 +99,10 @@ export default async function RestaurantsPage({ searchParams }: Props) {
         </Link>
       </header>
 
-      <RestaurantList restaurants={restaurants} />
+      {/* 리스트: Suspense로 스트리밍 — 데이터 로딩 중엔 스켈레톤 표시 */}
+      <Suspense fallback={<ListSkeleton />}>
+        <RestaurantsFetcher regionNames={regionNames} />
+      </Suspense>
     </div>
   )
 }
