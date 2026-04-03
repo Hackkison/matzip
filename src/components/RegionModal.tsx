@@ -139,7 +139,17 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
 
         setMunicipalities(merged)
         setLoading(false)
+
+        // 지도 로드 완료 즉시 전체 지역 URL로 prefetch 시작
+        // 유저가 선택하기 전부터 서버가 데이터를 미리 준비
+        if (onPrefetch) {
+          const allCodes = merged.flatMap((m) => m.subCodes ?? [m.code])
+          const allNames = merged.map((m) => m.name)
+          onPrefetch(allCodes, allNames)
+        }
       })
+  // onPrefetch는 의존성에서 제외 — 함수 참조 변경 시 불필요한 재실행 방지
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provinceCode])
 
   const getCodes = (m: MunicipalityShape) => m.subCodes ?? [m.code]
