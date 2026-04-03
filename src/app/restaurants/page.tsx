@@ -16,21 +16,26 @@ export default async function RestaurantsPage({ searchParams }: Props) {
   const { region, name } = await searchParams
   const regionNames = name ? name.split(',') : []
 
-  const { data: allRestaurants } = await supabase
+  let query = supabase
     .from('restaurants')
     .select('id, name, category, address, road_address, phone, image_url, price_range')
     .order('created_at', { ascending: false })
 
-  // 지역 필터
-  const filtered = regionNames.length > 0
-    ? (allRestaurants ?? []).filter((r) => {
-        const addr = (r.road_address || r.address || '').replace(/\s/g, '')
-        return regionNames.some((rn) => addr.includes(rn))
-      })
-    : (allRestaurants ?? [])
+  // 지역 필터를 DB 쿼리로 처리
+  if (regionNames.length > 0) {
+    const orFilter = regionNames
+      .flatMap((rn) => [
+        `road_address.ilike.%${rn}%`,
+        `address.ilike.%${rn}%`,
+      ])
+      .join(',')
+    query = query.or(orFilter)
+  }
+
+  const { data: filtered } = await query
 
   // 대표 사진 없는 식당: 최신 리뷰 사진을 썸네일로 사용
-  const noImageIds = filtered.filter(r => !r.image_url).map(r => r.id)
+  const noImageIds = (filtered ?? []).filter(r => !r.image_url).map(r => r.id)
   const reviewThumbnails: Record<string, string> = {}
 
   if (noImageIds.length > 0) {
@@ -49,7 +54,7 @@ export default async function RestaurantsPage({ searchParams }: Props) {
     }
   }
 
-  const restaurants = filtered.map(r => ({
+  const restaurants = (filtered ?? []).map(r => ({
     ...r,
     thumbnail_url: r.image_url ?? reviewThumbnails[r.id] ?? null,
     price_range: r.price_range ?? null,
