@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { revalidateRestaurantsCache } from '@/app/actions'
 import { resizeToWebP } from '@/lib/image'
 import { ChevronLeft, Search, X, ImagePlus } from 'lucide-react'
 import Link from 'next/link'
@@ -204,6 +205,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
       return
     }
 
+    await revalidateRestaurantsCache()
     router.push(`/restaurants/${data.id}`)
   }
 

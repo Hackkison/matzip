@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { revalidateTag } from 'next/cache'
 
 export async function DELETE(
   _request: NextRequest,
@@ -54,5 +55,6 @@ export async function DELETE(
     return NextResponse.json({ error: '맛집 삭제 실패' }, { status: 500 })
   }
 
+  revalidateTag('restaurants', {})
   return NextResponse.json({ success: true })
 }

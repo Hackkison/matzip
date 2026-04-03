@@ -3,54 +3,63 @@ import Link from 'next/link'
 import { ChevronLeft, Plus } from 'lucide-react'
 import RestaurantList from '@/components/RestaurantList'
 import { Suspense } from 'react'
+import { unstable_cache } from 'next/cache'
 
 interface Props {
   searchParams: Promise<{ region?: string; name?: string }>
 }
 
+// Supabase 쿼리 결과 캐싱 — revalidateTag('restaurants')로 무효화
+const getRestaurants = unstable_cache(
+  async (regionKey: string) => {
+    const supabase = await createClient()
+    const regionNames = regionKey ? regionKey.split(',') : []
+
+    let restaurantsQuery = supabase
+      .from('restaurants')
+      .select('id, name, category, address, road_address, phone, image_url, price_range')
+      .order('created_at', { ascending: false })
+
+    if (regionNames.length > 0) {
+      const orFilter = regionNames
+        .flatMap((rn) => [
+          `road_address.ilike.%${rn}%`,
+          `address.ilike.%${rn}%`,
+        ])
+        .join(',')
+      restaurantsQuery = restaurantsQuery.or(orFilter)
+    }
+
+    const [{ data: filtered }, { data: reviews }] = await Promise.all([
+      restaurantsQuery,
+      supabase
+        .from('reviews')
+        .select('restaurant_id, image_urls')
+        .not('image_urls', 'is', null)
+        .order('created_at', { ascending: false }),
+    ])
+
+    const reviewThumbnails: Record<string, string> = {}
+    for (const review of (reviews ?? [])) {
+      if (!reviewThumbnails[review.restaurant_id] && review.image_urls?.[0]) {
+        reviewThumbnails[review.restaurant_id] = review.image_urls[0]
+      }
+    }
+
+    return (filtered ?? []).map(r => ({
+      ...r,
+      thumbnail_url: r.image_url ?? reviewThumbnails[r.id] ?? null,
+      price_range: r.price_range ?? null,
+    }))
+  },
+  ['restaurants-list'],
+  { tags: ['restaurants'], revalidate: false }
+)
+
 // DB 쿼리를 분리한 비동기 Server Component — Suspense로 스트리밍
 async function RestaurantsFetcher({ regionNames }: { regionNames: string[] }) {
-  const supabase = await createClient()
-
-  let restaurantsQuery = supabase
-    .from('restaurants')
-    .select('id, name, category, address, road_address, phone, image_url, price_range')
-    .order('created_at', { ascending: false })
-
-  if (regionNames.length > 0) {
-    const orFilter = regionNames
-      .flatMap((rn) => [
-        `road_address.ilike.%${rn}%`,
-        `address.ilike.%${rn}%`,
-      ])
-      .join(',')
-    restaurantsQuery = restaurantsQuery.or(orFilter)
-  }
-
-  // 식당 쿼리 + 리뷰 썸네일 쿼리 병렬 실행
-  const [{ data: filtered }, { data: reviews }] = await Promise.all([
-    restaurantsQuery,
-    supabase
-      .from('reviews')
-      .select('restaurant_id, image_urls')
-      .not('image_urls', 'is', null)
-      .order('created_at', { ascending: false }),
-  ])
-
-  // restaurant_id당 가장 최신 리뷰 사진 첫 번째 선택
-  const reviewThumbnails: Record<string, string> = {}
-  for (const review of (reviews ?? [])) {
-    if (!reviewThumbnails[review.restaurant_id] && review.image_urls?.[0]) {
-      reviewThumbnails[review.restaurant_id] = review.image_urls[0]
-    }
-  }
-
-  const restaurants = (filtered ?? []).map(r => ({
-    ...r,
-    thumbnail_url: r.image_url ?? reviewThumbnails[r.id] ?? null,
-    price_range: r.price_range ?? null,
-  }))
-
+  const regionKey = [...regionNames].sort().join(',')
+  const restaurants = await getRestaurants(regionKey)
   return <RestaurantList restaurants={restaurants} />
 }
 
