@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import ReviewForm from './ReviewForm'
 
@@ -132,18 +133,18 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
                   <Stars rating={review.rating} />
                 </div>
                 {(review.user_id === currentUserId || isAdmin) && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     {review.user_id === currentUserId && (
                       <button
                         onClick={() => setEditingId(review.id)}
-                        className="text-xs text-zinc-400 hover:text-zinc-600"
+                        className="text-xs text-zinc-400 hover:text-zinc-600 px-2 py-1.5 min-h-[36px]"
                       >
                         수정
                       </button>
                     )}
                     <button
                       onClick={() => handleDelete(review.id, review.user_id !== currentUserId)}
-                      className="text-xs text-zinc-400 hover:text-red-500"
+                      className="text-xs text-zinc-400 hover:text-red-500 px-2 py-1.5 min-h-[36px]"
                     >
                       삭제
                     </button>
@@ -157,9 +158,8 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
                 <div className="flex gap-2 flex-wrap mt-1">
                   {review.image_urls.map((url, idx) => (
                     <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
-                      className="w-20 h-20 rounded-lg overflow-hidden bg-zinc-100 block shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={url} alt={`리뷰 사진 ${idx + 1}`} className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+                      className="relative w-20 h-20 rounded-lg overflow-hidden bg-zinc-100 block shrink-0">
+                      <Image src={url} alt={`리뷰 사진 ${idx + 1}`} fill sizes="80px" className="object-cover hover:opacity-90 transition-opacity" />
                     </a>
                   ))}
                 </div>

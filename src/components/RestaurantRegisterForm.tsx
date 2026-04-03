@@ -314,12 +314,12 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
               <label className="text-sm font-medium text-zinc-700 mb-1.5 block">
                 금액대 <span className="text-zinc-400 font-normal">(선택)</span>
               </label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {PRICE_RANGES.map(p => (
                   <button
                     key={p.value}
                     onClick={() => setPriceRange(priceRange === p.value ? null : p.value)}
-                    className={`flex-1 py-2 rounded-lg text-xs border transition-colors flex flex-col items-center gap-0.5 ${
+                    className={`py-3 rounded-lg text-xs border transition-colors flex flex-col items-center gap-0.5 ${
                       priceRange === p.value
                         ? 'bg-[#1B4332] text-white border-[#1B4332]'
                         : 'bg-white text-zinc-600 border-zinc-300 hover:border-[#1B4332]'

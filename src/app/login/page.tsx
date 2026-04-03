@@ -54,6 +54,8 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
+            inputMode="email"
             className="rounded-lg border border-zinc-200 px-4 py-3 text-sm outline-none transition-colors focus:border-[#1B4332]"
           />
           <input
@@ -63,6 +65,7 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
+            autoComplete={isSignUp ? 'new-password' : 'current-password'}
             className="rounded-lg border border-zinc-200 px-4 py-3 text-sm outline-none transition-colors focus:border-[#1B4332]"
           />
 

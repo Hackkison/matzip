@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { MapPin } from 'lucide-react'
 
 const PRICE_LABEL: Record<number, string> = {
@@ -53,12 +54,13 @@ export default function RestaurantCard({ restaurant }: Props) {
 
       {/* 대표 사진 또는 최신 리뷰 사진 썸네일 */}
       {restaurant.thumbnail_url && (
-        <div className="shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-zinc-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div className="relative shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-zinc-100">
+          <Image
             src={restaurant.thumbnail_url}
             alt={restaurant.name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="56px"
+            className="object-cover"
           />
         </div>
       )}

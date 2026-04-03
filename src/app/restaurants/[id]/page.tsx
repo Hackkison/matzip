@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ChevronLeft, MapPin, Phone, ExternalLink } from 'lucide-react'
 import ReviewList from '@/components/ReviewList'
 import DeleteRestaurantButton from '@/components/DeleteRestaurantButton'
@@ -63,9 +64,15 @@ export default async function RestaurantDetailPage({ params }: Props) {
       <main className="flex flex-1 flex-col px-4 py-6 md:px-8 max-w-lg mx-auto w-full gap-6">
         {/* 대표 사진 */}
         {restaurant.image_url && (
-          <div className="w-full aspect-video rounded-xl overflow-hidden bg-zinc-100">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={restaurant.image_url} alt={restaurant.name} className="w-full h-full object-cover" />
+          <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-zinc-100">
+            <Image
+              src={restaurant.image_url}
+              alt={restaurant.name}
+              fill
+              sizes="(max-width: 512px) 100vw, 512px"
+              className="object-cover"
+              priority
+            />
           </div>
         )}
 

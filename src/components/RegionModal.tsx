@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { geoMercator, geoPath } from 'd3-geo'
 import { X } from 'lucide-react'
 
@@ -34,6 +34,12 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
   const [hovered, setHovered] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [confirming, setConfirming] = useState(false)
+
+  // 모달 열린 동안 배경 스크롤 방지
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
 
   useEffect(() => {
     setLoading(true)
