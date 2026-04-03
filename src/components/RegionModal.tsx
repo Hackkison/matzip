@@ -25,9 +25,10 @@ interface Props {
   provinceName: string
   onClose: () => void
   onConfirm: (codes: string[], names: string[]) => void
+  onPrefetch?: (codes: string[], names: string[]) => void
 }
 
-export default function RegionModal({ provinceCode, provinceName, onClose, onConfirm }: Props) {
+export default function RegionModal({ provinceCode, provinceName, onClose, onConfirm, onPrefetch }: Props) {
   const [municipalities, setMunicipalities] = useState<MunicipalityShape[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map')
@@ -143,6 +144,21 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
 
   const getCodes = (m: MunicipalityShape) => m.subCodes ?? [m.code]
   const isItemSelected = (m: MunicipalityShape) => getCodes(m).some((c) => selected.has(c))
+
+  // 선택이 바뀌면 즉시 prefetch 시작 — 확정 버튼 클릭 전에 미리 데이터 요청
+  useEffect(() => {
+    if (!onPrefetch || selected.size === 0) return
+    const codes: string[] = []
+    const names: string[] = []
+    municipalities.forEach((m) => {
+      if (isItemSelected(m)) {
+        getCodes(m).forEach((c) => codes.push(c))
+        names.push(m.name)
+      }
+    })
+    if (codes.length > 0) onPrefetch(codes, names)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected])
 
   const toggle = (code: string) => {
     const m = municipalities.find((m) => m.code === code)

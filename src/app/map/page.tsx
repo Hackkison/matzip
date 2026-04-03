@@ -25,12 +25,15 @@ export default function MapPage() {
     setModal({ code, name })
   }
 
+  const buildRestaurantsUrl = (codes: string[], names: string[]) =>
+    `/restaurants?${new URLSearchParams({ region: codes.join(','), name: names.join(',') })}`
+
+  const handlePrefetch = (codes: string[], names: string[]) => {
+    router.prefetch(buildRestaurantsUrl(codes, names))
+  }
+
   const handleConfirm = (codes: string[], names: string[]) => {
-    const params = new URLSearchParams({
-      region: codes.join(','),
-      name: names.join(','),
-    })
-    router.push(`/restaurants?${params.toString()}`)
+    router.push(buildRestaurantsUrl(codes, names))
   }
 
   return (
@@ -75,6 +78,7 @@ export default function MapPage() {
           provinceName={modal.name}
           onClose={() => setModal(null)}
           onConfirm={handleConfirm}
+          onPrefetch={handlePrefetch}
         />
       )}
     </div>
