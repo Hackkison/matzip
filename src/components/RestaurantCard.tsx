@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin } from 'lucide-react'
+import { MapPin, Heart } from 'lucide-react'
 import { getCategoryStyle } from '@/lib/category'
 
 const PRICE_LABEL: Record<number, string> = {
@@ -23,9 +23,10 @@ interface Restaurant {
 
 interface Props {
   restaurant: Restaurant
+  isFavorited?: boolean
 }
 
-export default function RestaurantCard({ restaurant }: Props) {
+export default function RestaurantCard({ restaurant, isFavorited = false }: Props) {
   const address = restaurant.road_address || restaurant.address
   const { bg, text } = getCategoryStyle(restaurant.category)
 
@@ -49,6 +50,12 @@ export default function RestaurantCard({ restaurant }: Props) {
             <span className={`text-xl font-bold ${text}`}>
               {restaurant.name[0]}
             </span>
+          </div>
+        )}
+        {/* 즐겨찾기 뱃지 */}
+        {isFavorited && (
+          <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
+            <Heart size={11} className="text-yellow-500" fill="#EAB308" />
           </div>
         )}
       </div>

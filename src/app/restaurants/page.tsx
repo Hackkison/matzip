@@ -52,8 +52,18 @@ async function fetchRestaurants(regionNames: string[]) {
 
 // DB 쿼리를 분리한 비동기 Server Component — Suspense로 스트리밍
 async function RestaurantsFetcher({ regionNames }: { regionNames: string[] }) {
-  const restaurants = await fetchRestaurants(regionNames)
-  return <RestaurantList restaurants={restaurants} />
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const [restaurants, { data: favData }] = await Promise.all([
+    fetchRestaurants(regionNames),
+    user
+      ? supabase.from('favorites').select('restaurant_id').eq('user_id', user.id)
+      : Promise.resolve({ data: [] }),
+  ])
+
+  const favoritedIds = new Set((favData ?? []).map((f) => f.restaurant_id))
+  return <RestaurantList restaurants={restaurants} favoritedIds={favoritedIds} />
 }
 
 // 리스트 로딩 중 표시할 스켈레톤

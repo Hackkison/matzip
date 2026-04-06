@@ -27,9 +27,10 @@ interface Restaurant {
 
 interface Props {
   restaurants: Restaurant[]
+  favoritedIds?: Set<string>
 }
 
-export default function RestaurantList({ restaurants }: Props) {
+export default function RestaurantList({ restaurants, favoritedIds }: Props) {
   const [active, setActive] = useState('전체')
   const [sort, setSort] = useState('latest')
   const [showSortMenu, setShowSortMenu] = useState(false)
@@ -117,7 +118,13 @@ export default function RestaurantList({ restaurants }: Props) {
             <p className="text-zinc-300 text-xs">첫 번째 맛집을 등록해보세요</p>
           </div>
         ) : (
-          sorted.map((r) => <RestaurantCard key={r.id} restaurant={r} />)
+          sorted.map((r) => (
+            <RestaurantCard
+              key={r.id}
+              restaurant={r}
+              isFavorited={favoritedIds?.has(r.id) ?? false}
+            />
+          ))
         )}
       </div>
     </div>
