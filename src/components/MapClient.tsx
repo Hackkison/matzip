@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Search, Heart } from 'lucide-react'
 import { getCategoryStyle } from '@/lib/category'
 
@@ -26,6 +27,7 @@ interface RecentRestaurant {
   name: string
   category: string
   isFavorited: boolean
+  thumbnail_url: string | null
 }
 
 interface Props {
@@ -64,7 +66,7 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
       : recentRestaurants.filter((r) => r.category === activeCategory)
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50">
+    <div className="flex flex-1 flex-col bg-zinc-50">
       {/* D: 확장 헤더 — 닉네임 + 맛집 수 + 검색창 */}
       <header className="bg-[#1B4332] px-5 pt-5 pb-5 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
@@ -130,12 +132,12 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
       </div>
 
       {/* 지도 */}
-      <div className="flex-1 flex flex-col items-center bg-white px-4 py-4">
+      <div className="shrink-0 flex flex-col items-center bg-white px-4 py-2">
         <KoreaMap onSelect={(code, name) => setModal({ code, name })} />
       </div>
 
       {/* C: 최근 등록 맛집 미리보기 */}
-      <div className="bg-white border-t border-zinc-100 pt-3.5 pb-3 flex-shrink-0">
+      <div className="bg-white border-t border-zinc-100 pt-3.5 pb-3 flex-1">
         <div className="flex items-center justify-between px-4 mb-2.5">
           <p className="text-sm font-bold text-zinc-800">
             {activeCategory === '전체' ? '최근 등록 맛집' : `${activeCategory} 최근 맛집`}
@@ -156,12 +158,24 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
                   href={`/restaurants/${r.id}`}
                   className="shrink-0 w-[100px] bg-zinc-50 border border-zinc-100 rounded-2xl overflow-hidden hover:border-[#1B4332]/30 transition-colors"
                 >
-                  <div className={`h-[60px] flex items-center justify-center relative ${bg}`}>
-                    <span className="text-2xl">{CATEGORY_EMOJI[r.category] ?? '🍽️'}</span>
+                  <div className={`relative h-[60px] overflow-hidden ${!r.thumbnail_url ? bg : ''}`}>
+                    {r.thumbnail_url ? (
+                      <Image
+                        src={r.thumbnail_url}
+                        alt={r.name}
+                        fill
+                        sizes="100px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl">{CATEGORY_EMOJI[r.category] ?? '🍽️'}</span>
+                      </div>
+                    )}
                     {r.isFavorited && (
                       <Heart
                         size={11}
-                        className="absolute top-1.5 right-2 text-yellow-500"
+                        className="absolute top-1.5 right-2 text-yellow-500 z-10"
                         fill="#EAB308"
                       />
                     )}

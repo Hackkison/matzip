@@ -12,7 +12,7 @@ interface ProvinceShape {
 }
 
 const WIDTH = 400
-const HEIGHT = 520
+const HEIGHT = 460
 
 interface Props {
   onSelect: (code: string, name: string) => void
@@ -86,7 +86,7 @@ export default function KoreaMap({ onSelect }: Props) {
   return (
     <svg
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      className="w-full max-w-xs md:max-w-xl lg:max-w-3xl mx-auto select-none"
+      className="w-full max-w-[200px] md:max-w-xs mx-auto select-none"
       overflow="visible"
     >
       {/* 1패스: path 전체 먼저 렌더 */}
