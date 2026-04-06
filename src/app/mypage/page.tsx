@@ -27,10 +27,10 @@ export default async function MyPage() {
   ])
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4 md:px-8">
+    <div className="flex min-h-screen flex-col bg-zinc-50">
+      <header className="flex items-center gap-3 bg-[#1B4332] px-4 py-4 md:px-8">
         <div className="flex-1">
-          <h1 className="text-base font-semibold text-[#1B4332]">마이페이지</h1>
+          <h1 className="text-base font-semibold text-white">마이페이지</h1>
         </div>
         <LogoutButton />
       </header>

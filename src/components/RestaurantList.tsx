@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import RestaurantCard from './RestaurantCard'
 import { ChevronDown } from 'lucide-react'
+import { getCategoryStyle } from '@/lib/category'
 
 const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '디저트', '기타']
 
@@ -60,19 +61,22 @@ export default function RestaurantList({ restaurants }: Props) {
       <div className="border-b border-zinc-100">
         <div className="flex items-center gap-2 px-4 py-3 md:px-8 max-w-3xl mx-auto">
           <div className="flex gap-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c}
-                onClick={() => setActive(c)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs border transition-colors ${
-                  active === c
-                    ? 'bg-[#1B4332] text-white border-[#1B4332]'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-[#1B4332]'
-                }`}
-              >
-                {c}
-              </button>
-            ))}
+            {CATEGORIES.map((c) => {
+              const { bg, text } = c === '전체' ? { bg: 'bg-[#1B4332]', text: 'text-white' } : getCategoryStyle(c)
+              return (
+                <button
+                  key={c}
+                  onClick={() => setActive(c)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                    active === c
+                      ? `${bg} ${text} border-transparent`
+                      : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300'
+                  }`}
+                >
+                  {c}
+                </button>
+              )
+            })}
           </div>
 
           {/* 정렬 드롭다운 */}

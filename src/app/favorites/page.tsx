@@ -27,14 +27,15 @@ export default async function FavoritesPage() {
     }))
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <header className="flex items-center border-b border-zinc-100 px-4 py-4 md:px-8">
-        <h1 className="text-base font-semibold text-[#1B4332]">즐겨찾기</h1>
+    <div className="flex min-h-screen flex-col bg-zinc-50">
+      <header className="flex items-center bg-yellow-400 px-4 py-4 md:px-8">
+        <h1 className="text-base font-semibold text-yellow-900">즐겨찾기</h1>
       </header>
 
       <main className="flex-1 px-4 py-4 md:px-8">
         {restaurants.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 gap-2 text-zinc-400">
+            <p className="text-2xl">🤍</p>
             <p className="text-sm">즐겨찾기한 맛집이 없어요</p>
             <p className="text-xs">식당 상세 페이지에서 하트를 눌러보세요</p>
           </div>

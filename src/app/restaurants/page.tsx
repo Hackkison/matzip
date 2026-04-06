@@ -80,7 +80,7 @@ export default async function RestaurantsPage({ searchParams }: Props) {
   const regionNames = name ? name.split(',') : []
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-zinc-50">
       {/* 헤더: DB 쿼리와 무관하게 즉시 렌더 */}
       <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4 md:px-8">
         <Link href="/map" className="text-zinc-400 hover:text-zinc-600">

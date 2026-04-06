@@ -37,8 +37,8 @@ export default function MapPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <header className="flex items-center border-b border-zinc-100 px-6 py-4">
-        <h1 className="flex-1 text-lg font-semibold text-[#1B4332]">맛집 지도</h1>
+      <header className="flex items-center bg-[#1B4332] px-6 py-4">
+        <h1 className="flex-1 text-lg font-semibold text-white">맛집 지도</h1>
       </header>
 
       <main className="flex flex-1 flex-col items-center justify-center px-4 py-4 gap-2 md:py-6">
