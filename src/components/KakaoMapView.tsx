@@ -5,7 +5,6 @@ import Script from 'next/script'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { LocateFixed } from 'lucide-react'
-import BottomNav from '@/components/BottomNav'
 
 interface Place {
   id: string
@@ -200,7 +199,7 @@ export default function KakaoMapView() {
   }, [sdkReady, initMap])
 
   return (
-    <div className="flex flex-col h-screen bg-white pb-16">
+    <div className="flex flex-col h-screen bg-white">
       <Script
         src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_JS_KEY}&autoload=false`}
         onLoad={() => setSdkReady(true)}
@@ -250,7 +249,6 @@ export default function KakaoMapView() {
           </div>
         </div>
       )}
-      <BottomNav />
     </div>
   )
 }

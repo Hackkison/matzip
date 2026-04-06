@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { Search } from 'lucide-react'
-import BottomNav from '@/components/BottomNav'
 
 const KoreaMap = dynamic(() => import('@/components/KoreaMap'), { ssr: false })
 const RegionModal = dynamic(() => import('@/components/RegionModal'), { ssr: false })
@@ -37,7 +36,7 @@ export default function MapPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white pb-16">
+    <div className="flex min-h-screen flex-col bg-white">
       <header className="flex items-center border-b border-zinc-100 px-6 py-4">
         <h1 className="flex-1 text-lg font-semibold text-[#1B4332]">맛집 지도</h1>
       </header>
@@ -75,7 +74,6 @@ export default function MapPage() {
           onPrefetch={handlePrefetch}
         />
       )}
-      <BottomNav />
     </div>
   )
 }

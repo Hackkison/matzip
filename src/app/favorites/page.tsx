@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import BottomNav from '@/components/BottomNav'
 import RestaurantCard from '@/components/RestaurantCard'
 
 export default async function FavoritesPage() {
@@ -28,7 +27,7 @@ export default async function FavoritesPage() {
     }))
 
   return (
-    <div className="flex min-h-screen flex-col bg-white pb-16">
+    <div className="flex min-h-screen flex-col bg-white">
       <header className="flex items-center border-b border-zinc-100 px-4 py-4 md:px-8">
         <h1 className="text-base font-semibold text-[#1B4332]">즐겨찾기</h1>
       </header>
@@ -48,7 +47,6 @@ export default async function FavoritesPage() {
         )}
       </main>
 
-      <BottomNav />
     </div>
   )
 }

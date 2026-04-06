@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { MapPin, Star } from 'lucide-react'
 import LogoutButton from '@/components/logout-button'
 import DeleteAccountButton from '@/components/DeleteAccountButton'
-import BottomNav from '@/components/BottomNav'
 
 export default async function MyPage() {
   const supabase = await createClient()
@@ -28,7 +27,7 @@ export default async function MyPage() {
   ])
 
   return (
-    <div className="flex min-h-screen flex-col bg-white pb-16">
+    <div className="flex min-h-screen flex-col bg-white">
       <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4 md:px-8">
         <div className="flex-1">
           <h1 className="text-base font-semibold text-[#1B4332]">마이페이지</h1>
@@ -128,7 +127,6 @@ export default async function MyPage() {
           <DeleteAccountButton />
         </section>
       </main>
-      <BottomNav />
     </div>
   )
 }
