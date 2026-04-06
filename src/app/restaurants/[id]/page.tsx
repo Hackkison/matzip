@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { ChevronLeft, MapPin, Phone, ExternalLink } from 'lucide-react'
 import ReviewList from '@/components/ReviewList'
 import DeleteRestaurantButton from '@/components/DeleteRestaurantButton'
+import FavoriteButton from '@/components/FavoriteButton'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -19,7 +20,7 @@ export default async function RestaurantDetailPage({ params }: Props) {
 
   const { id } = await params
 
-  const [{ data: restaurant }, { data: reviews }, { data: profile }] = await Promise.all([
+  const [{ data: restaurant }, { data: reviews }, { data: profile }, { data: favorite }] = await Promise.all([
     supabase.from('restaurants').select('*').eq('id', id).single(),
     supabase
       .from('reviews')
@@ -27,12 +28,14 @@ export default async function RestaurantDetailPage({ params }: Props) {
       .eq('restaurant_id', id)
       .order('created_at', { ascending: false }),
     supabase.from('profiles').select('is_admin').eq('id', user.id).single(),
+    supabase.from('favorites').select('id').eq('user_id', user.id).eq('restaurant_id', id).maybeSingle(),
   ])
 
   if (!restaurant) notFound()
 
   const isAdmin = profile?.is_admin === true
   const canDelete = isAdmin
+  const isFavorited = !!favorite
 
   const address = restaurant.road_address || restaurant.address
   const kakaoMapUrl = `https://map.kakao.com/link/map/${encodeURIComponent(restaurant.name)},${restaurant.lat},${restaurant.lng}`
@@ -83,6 +86,9 @@ export default async function RestaurantDetailPage({ params }: Props) {
             <InfoRow icon={<Phone size={15} />} label="전화" value={restaurant.phone} />
           )}
         </section>
+
+        {/* 즐겨찾기 */}
+        <FavoriteButton restaurantId={id} initialFavorited={isFavorited} />
 
         {/* 카카오맵 링크 */}
         <a

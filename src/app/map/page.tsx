@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import Link from 'next/link'
-import { User, Search, Map } from 'lucide-react'
+import { Search } from 'lucide-react'
+import BottomNav from '@/components/BottomNav'
 
 const KoreaMap = dynamic(() => import('@/components/KoreaMap'), { ssr: false })
 const RegionModal = dynamic(() => import('@/components/RegionModal'), { ssr: false })
@@ -37,15 +37,9 @@ export default function MapPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-white pb-16">
       <header className="flex items-center border-b border-zinc-100 px-6 py-4">
-        <h1 className="flex-1 text-lg font-semibold text-[#1B4332]">지역 선택</h1>
-        <Link href="/kakaomap" className="text-zinc-400 hover:text-[#1B4332] transition-colors mr-3">
-          <Map size={20} />
-        </Link>
-        <Link href="/mypage" className="text-zinc-400 hover:text-[#1B4332] transition-colors">
-          <User size={20} />
-        </Link>
+        <h1 className="flex-1 text-lg font-semibold text-[#1B4332]">맛집 지도</h1>
       </header>
 
       <main className="flex flex-1 flex-col items-center justify-center px-4 py-4 gap-2 md:py-6">
@@ -81,6 +75,7 @@ export default function MapPage() {
           onPrefetch={handlePrefetch}
         />
       )}
+      <BottomNav />
     </div>
   )
 }

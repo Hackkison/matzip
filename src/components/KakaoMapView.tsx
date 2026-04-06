@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import Script from 'next/script'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ChevronLeft, LocateFixed } from 'lucide-react'
+import { LocateFixed } from 'lucide-react'
+import BottomNav from '@/components/BottomNav'
 
 interface Place {
   id: string
@@ -199,16 +200,13 @@ export default function KakaoMapView() {
   }, [sdkReady, initMap])
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-screen bg-white pb-16">
       <Script
         src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_JS_KEY}&autoload=false`}
         onLoad={() => setSdkReady(true)}
       />
 
       <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4 md:px-8 shrink-0">
-        <Link href="/map" className="text-zinc-400 hover:text-zinc-600">
-          <ChevronLeft size={20} />
-        </Link>
         <div className="flex-1">
           <h1 className="text-base font-semibold text-[#1B4332]">주변 맛집 지도</h1>
           {loading
@@ -252,6 +250,7 @@ export default function KakaoMapView() {
           </div>
         </div>
       )}
+      <BottomNav />
     </div>
   )
 }

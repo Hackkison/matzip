@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, MapPin, Star } from 'lucide-react'
+import { MapPin, Star } from 'lucide-react'
 import LogoutButton from '@/components/logout-button'
 import DeleteAccountButton from '@/components/DeleteAccountButton'
+import BottomNav from '@/components/BottomNav'
 
 export default async function MyPage() {
   const supabase = await createClient()
@@ -27,11 +28,8 @@ export default async function MyPage() {
   ])
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-white pb-16">
       <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4 md:px-8">
-        <Link href="/map" className="text-zinc-400 hover:text-zinc-600">
-          <ChevronLeft size={20} />
-        </Link>
         <div className="flex-1">
           <h1 className="text-base font-semibold text-[#1B4332]">마이페이지</h1>
         </div>
@@ -130,6 +128,7 @@ export default async function MyPage() {
           <DeleteAccountButton />
         </section>
       </main>
+      <BottomNav />
     </div>
   )
 }
