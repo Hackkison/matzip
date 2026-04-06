@@ -1,0 +1,145 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { ChevronLeft, Star } from 'lucide-react'
+import AdminDeleteButton from '@/components/AdminDeleteButton'
+
+export default async function AdminPage() {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single()
+
+  // 관리자가 아니면 메인으로 이동
+  if (!profile?.is_admin) redirect('/map')
+
+  const [{ data: restaurants }, { data: reviews }] = await Promise.all([
+    supabase
+      .from('restaurants')
+      .select('id, name, category, road_address, address, created_at, profiles(name)')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('reviews')
+      .select('id, rating, content, created_at, restaurant_id, user_id, restaurants(name), profiles(name)')
+      .order('created_at', { ascending: false }),
+  ])
+
+  return (
+    <div className="flex min-h-screen flex-col bg-white">
+      <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4 md:px-8">
+        <Link href="/map" className="text-zinc-400 hover:text-zinc-600">
+          <ChevronLeft size={20} />
+        </Link>
+        <h1 className="text-base font-semibold text-[#1B4332]">관리자 콘텐츠 관리</h1>
+      </header>
+
+      <main className="flex flex-1 flex-col px-4 py-6 md:px-8 max-w-3xl mx-auto w-full gap-10">
+
+        {/* 식당 관리 */}
+        <section>
+          <h2 className="text-sm font-semibold text-zinc-800 mb-3">
+            식당 관리 ({restaurants?.length ?? 0})
+          </h2>
+          {!restaurants || restaurants.length === 0 ? (
+            <p className="text-sm text-zinc-400 text-center py-4">등록된 식당이 없어요</p>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {restaurants.map((r) => {
+                const creatorName = Array.isArray(r.profiles)
+                  ? r.profiles[0]?.name
+                  : (r.profiles as { name: string } | null)?.name
+                const address = r.road_address || r.address
+                return (
+                  <div
+                    key={r.id}
+                    className="flex items-center gap-3 px-3 py-2.5 border border-zinc-100 rounded-lg"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/restaurants/${r.id}`}
+                          className="text-sm font-medium text-zinc-800 hover:text-[#1B4332] truncate"
+                        >
+                          {r.name}
+                        </Link>
+                        <span className="shrink-0 px-1.5 py-0.5 rounded bg-[#1B4332]/10 text-[#1B4332] text-xs">
+                          {r.category}
+                        </span>
+                      </div>
+                      <p className="text-xs text-zinc-400 truncate mt-0.5">
+                        {address} · 등록자: {creatorName ?? '알 수 없음'} ·{' '}
+                        {new Date(r.created_at).toLocaleDateString('ko-KR')}
+                      </p>
+                    </div>
+                    <AdminDeleteButton
+                      apiUrl={`/api/restaurants/${r.id}`}
+                      confirmMessage={`"${r.name}"을(를) 삭제할까요? 관련 리뷰도 모두 삭제됩니다.`}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* 리뷰 관리 */}
+        <section>
+          <h2 className="text-sm font-semibold text-zinc-800 mb-3">
+            리뷰 관리 ({reviews?.length ?? 0})
+          </h2>
+          {!reviews || reviews.length === 0 ? (
+            <p className="text-sm text-zinc-400 text-center py-4">작성된 리뷰가 없어요</p>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {reviews.map((rv) => {
+                const restaurantName = Array.isArray(rv.restaurants)
+                  ? rv.restaurants[0]?.name
+                  : (rv.restaurants as { name: string } | null)?.name
+                const reviewerName = Array.isArray(rv.profiles)
+                  ? rv.profiles[0]?.name
+                  : (rv.profiles as { name: string } | null)?.name
+                return (
+                  <div
+                    key={rv.id}
+                    className="flex items-center gap-3 px-3 py-2.5 border border-zinc-100 rounded-lg"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/restaurants/${rv.restaurant_id}`}
+                          className="text-sm font-medium text-zinc-800 hover:text-[#1B4332] truncate"
+                        >
+                          {restaurantName ?? '삭제된 식당'}
+                        </Link>
+                        <span className="shrink-0 flex items-center gap-0.5 text-xs text-zinc-400">
+                          <Star size={10} className="text-yellow-400 fill-yellow-400" />
+                          {rv.rating}
+                        </span>
+                      </div>
+                      <p className="text-xs text-zinc-400 truncate mt-0.5">
+                        {reviewerName ?? '알 수 없음'} ·{' '}
+                        {rv.content ? rv.content.slice(0, 40) + (rv.content.length > 40 ? '…' : '') : '(내용 없음)'} ·{' '}
+                        {new Date(rv.created_at).toLocaleDateString('ko-KR')}
+                      </p>
+                    </div>
+                    <AdminDeleteButton
+                      apiUrl={`/api/reviews/${rv.id}`}
+                      confirmMessage="이 리뷰를 삭제할까요?"
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+      </main>
+    </div>
+  )
+}

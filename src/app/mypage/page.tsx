@@ -45,7 +45,9 @@ export default async function MyPage() {
             <p className="text-lg font-semibold text-zinc-800">{profile?.name ?? '닉네임 없음'}</p>
             <p className="text-xs text-zinc-400">{user.email}</p>
             {profile?.is_admin && (
-              <span className="text-xs text-[#1B4332] font-medium">관리자</span>
+              <Link href="/admin" className="text-xs text-[#1B4332] font-medium hover:underline">
+                관리자 콘텐츠 관리 →
+              </Link>
             )}
           </div>
           <Link

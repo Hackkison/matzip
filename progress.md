@@ -83,6 +83,7 @@
 - [x] 리뷰 목록 표시
 - [x] 본인 리뷰 수정 / 삭제
 - [x] 평점 집계 표시
+- [N/A] 카카오 리뷰 연동 — **불가능** (Kakao Local API 리뷰/평점 미제공, 크롤링은 약관 위반)
 
 ---
 
@@ -129,9 +130,9 @@
 ---
 
 ### Phase 11 — 최적화 & 배포
-- [ ] SVG 지도 lazy-load (시/도별 파일 분리)
-- [ ] 모바일 UX 최적화
+- [x] SVG 지도 lazy-load (KoreaMap/RegionModal dynamic import + 시/도별 municipalities JSON 온디맨드 fetch)
+- [x] 모바일 UX 최적화 (next/image 전환, 터치 타겟, body 스크롤 잠금, inputMode 등)
 - [ ] Core Web Vitals 점검 (LCP 3초 이내)
 - [ ] HR 앱 인증 이관 검토 (JWT 공유, CORS, SameSite 정책)
 - [ ] Vercel 프로덕션 배포
-- [ ] 운영자 콘텐츠 관리 기능
+- [x] 운영자 콘텐츠 관리 기능 (/admin — 전체 식당·리뷰 목록 + 삭제, 관리자만 접근)
