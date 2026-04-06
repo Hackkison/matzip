@@ -132,7 +132,7 @@
 ### Phase 11 — 최적화 & 배포
 - [x] SVG 지도 lazy-load (KoreaMap/RegionModal dynamic import + 시/도별 municipalities JSON 온디맨드 fetch)
 - [x] 모바일 UX 최적화 (next/image 전환, 터치 타겟, body 스크롤 잠금, inputMode 등)
-- [ ] Core Web Vitals 점검 (LCP 3초 이내)
+- [x] Core Web Vitals 점검 — @vercel/speed-insights + @vercel/analytics 적용 (실사용자 데이터 수집 시작)
 - [ ] HR 앱 인증 이관 검토 (JWT 공유, CORS, SameSite 정책)
-- [ ] Vercel 프로덕션 배포
+- [x] Vercel 프로덕션 배포 (https://matzip-two.vercel.app)
 - [x] 운영자 콘텐츠 관리 기능 (/admin — 전체 식당·리뷰 목록 + 삭제, 관리자만 접근)
