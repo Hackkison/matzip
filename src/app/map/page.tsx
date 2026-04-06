@@ -1,79 +1,44 @@
-'use client'
+import { createClient } from '@/lib/supabase/server'
+import MapClient from '@/components/MapClient'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
-import { Search } from 'lucide-react'
+export default async function MapPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-const KoreaMap = dynamic(() => import('@/components/KoreaMap'), { ssr: false })
-const RegionModal = dynamic(() => import('@/components/RegionModal'), { ssr: false })
+  const [
+    { data: profile },
+    { count: restaurantCount },
+    { data: recentRaw },
+    { data: favData },
+  ] = await Promise.all([
+    user
+      ? supabase.from('profiles').select('name').eq('id', user.id).single()
+      : Promise.resolve({ data: null, error: null }),
+    supabase.from('restaurants').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('restaurants')
+      .select('id, name, category')
+      .order('created_at', { ascending: false })
+      .limit(6),
+    user
+      ? supabase.from('favorites').select('restaurant_id').eq('user_id', user.id)
+      : Promise.resolve({ data: [], error: null }),
+  ])
 
-export default function MapPage() {
-  const router = useRouter()
-  const [modal, setModal] = useState<{ code: string; name: string } | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const favoritedIds = new Set((favData ?? []).map((f) => f.restaurant_id))
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
-    }
-  }
-
-  const handleProvinceSelect = (code: string, name: string) => {
-    setModal({ code, name })
-  }
-
-  const buildRestaurantsUrl = (codes: string[], names: string[]) =>
-    `/restaurants?${new URLSearchParams({ region: codes.join(','), name: names.join(',') })}`
-
-  const handlePrefetch = (codes: string[], names: string[]) => {
-    router.prefetch(buildRestaurantsUrl(codes, names))
-  }
-
-  const handleConfirm = (codes: string[], names: string[]) => {
-    router.push(buildRestaurantsUrl(codes, names))
-  }
+  const recentRestaurants = (recentRaw ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    category: r.category,
+    isFavorited: favoritedIds.has(r.id),
+  }))
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <header className="flex items-center bg-[#1B4332] px-6 py-4">
-        <h1 className="flex-1 text-lg font-semibold text-white">맛집 지도</h1>
-      </header>
-
-      <main className="flex flex-1 flex-col items-center justify-center px-4 py-4 gap-2 md:py-6">
-        <div className="w-full max-w-sm md:max-w-2xl lg:max-w-4xl flex flex-col items-center gap-2">
-          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-[#1B4332]">맛집 지도</h2>
-          <p className="text-sm md:text-base text-zinc-500 mb-1">시/도를 선택하거나 검색하세요</p>
-
-          {/* 검색바 */}
-          <form onSubmit={handleSearch} className="w-full max-w-sm mb-1">
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="식당명 또는 지역명으로 검색"
-                inputMode="search"
-                autoComplete="off"
-                className="w-full pl-9 pr-4 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
-              />
-            </div>
-          </form>
-          <KoreaMap onSelect={handleProvinceSelect} />
-        </div>
-      </main>
-
-      {modal && (
-        <RegionModal
-          provinceCode={modal.code}
-          provinceName={modal.name}
-          onClose={() => setModal(null)}
-          onConfirm={handleConfirm}
-          onPrefetch={handlePrefetch}
-        />
-      )}
-    </div>
+    <MapClient
+      nickname={(profile as { name?: string } | null)?.name ?? null}
+      restaurantCount={restaurantCount ?? 0}
+      recentRestaurants={recentRestaurants}
+    />
   )
 }

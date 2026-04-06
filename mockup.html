@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>맛집 서비스 — 목업</title>
+  <title>맛집 서비스 — 목업 (지도 페이지 B+C+D)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -12,13 +12,13 @@
 
     body {
       font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f5f5;
+      background: #e8e8e8;
       display: flex;
       justify-content: center;
       align-items: flex-start;
       min-height: 100vh;
       padding: 40px 16px 80px;
-      gap: 32px;
+      gap: 48px;
       flex-wrap: wrap;
     }
 
@@ -43,1884 +43,539 @@
       background: #333; border-radius: 99px;
     }
     .screen {
-      height: 780px;
+      height: 812px;
       overflow-y: auto;
+      overflow-x: hidden;
       position: relative;
-      background: #fff;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
     }
-    .screen::-webkit-scrollbar { display: none; }
 
-    /* ── 화면 전환 ── */
-    .view { display: none; }
-    .view.active { display: block; }
-
-    /* ── 공통 상단바 ── */
-    .top-bar {
-      position: sticky; top: 0; z-index: 10;
-      background: #fff;
-      border-bottom: 1px solid #e5e5e5;
-      display: flex; align-items: center; gap: 8px;
-      padding: 0 16px;
-      height: 56px;
+    /* ── D: 확장 헤더 ── */
+    .header {
+      background: #1B4332;
+      padding: 16px 20px 20px;
+      flex-shrink: 0;
     }
-    .top-bar h2 { font-size: 16px; font-weight: 700; color: #09090b; flex: 1; }
-    .back-btn {
-      width: 32px; height: 32px;
-      background: none; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: #09090b; font-size: 18px; border-radius: 8px;
-      transition: background .1s;
-    }
-    .back-btn:hover { background: #f4f4f5; }
-    .icon-btn {
-      width: 32px; height: 32px;
-      background: none; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; border-radius: 8px;
-      transition: background .1s;
-    }
-    .icon-btn:hover { background: #f4f4f5; }
-
-    /* ════════════════════════════════
-       화면 1 — 지역 선택 (SVG 지도)
-    ════════════════════════════════ */
-    #view-region .top-bar {
+    .header-top {
+      display: flex;
+      align-items: center;
       justify-content: space-between;
+      margin-bottom: 12px;
     }
-    .app-title {
-      font-size: 17px; font-weight: 800; color: #09090b; letter-spacing: -.3px;
+    .header-greeting {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .header-greeting span {
+      color: #a7f3d0;
+    }
+    .header-stats {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 99px;
+      padding: 5px 12px;
+    }
+    .header-stats-dot {
+      width: 6px; height: 6px;
+      background: #6ee7b7;
+      border-radius: 50%;
+    }
+    .header-stats-text {
+      font-size: 11px;
+      font-weight: 600;
+      color: #d1fae5;
+    }
+    .header-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 10px 14px;
+    }
+    .header-search-icon {
+      width: 16px; height: 16px;
+      opacity: 0.6;
+    }
+    .header-search-text {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
     }
 
-    .map-container {
-      padding: 16px;
+    /* ── B: 카테고리 칩 ── */
+    .category-bar {
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+      padding: 10px 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .category-bar::-webkit-scrollbar { display: none; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .chip.active { border-color: transparent; }
+    .chip-all   { background: #1B4332; color: #fff; }
+    .chip-korean{ background: #fff3e0; color: #e65100; border-color: #ffe0b2; }
+    .chip-chinese{ background: #fce4ec; color: #c62828; border-color: #ffcdd2; }
+    .chip-japanese{ background: #e3f2fd; color: #1565c0; border-color: #bbdefb; }
+    .chip-western{ background: #f3e5f5; color: #6a1b9a; border-color: #e1bee7; }
+    .chip-dessert{ background: #fce4ec; color: #ad1457; border-color: #f8bbd0; }
+
+    /* ── 지도 영역 ── */
+    .map-area {
+      flex: 1;
+      position: relative;
+      background: linear-gradient(160deg, #e8f5e9 0%, #c8e6c9 100%);
+      min-height: 280px;
+      overflow: hidden;
+    }
+    .map-svg {
+      width: 100%; height: 100%;
+      position: absolute; top: 0; left: 0;
     }
     .map-label {
-      font-size: 13px; font-weight: 600; color: #71717a;
-      margin-bottom: 10px;
-    }
-    .korea-svg-wrap {
-      border: 1px solid #e5e5e5;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #fafafa;
-    }
-    .korea-svg-wrap svg {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    /* SVG 지역 기본 스타일 */
-    .region-path {
-      fill: #f4f4f5;
-      stroke: #d4d4d8;
-      stroke-width: 0.8;
-      cursor: pointer;
-      transition: fill .15s;
-    }
-    .region-path:hover { fill: #e4e4e7; }
-    .region-path.selected { fill: #09090b; }
-    .region-path.selected:hover { fill: #27272a; }
-    .region-path.metro { fill: #e8e8ec; }
-    .region-path.metro:hover { fill: #dadadf; }
-    .region-path.metro.selected { fill: #09090b; }
-
-    .region-label {
-      font-size: 7px;
-      font-weight: 600;
-      fill: #52525b;
-      pointer-events: none;
-      font-family: 'Geist', sans-serif;
-    }
-    .region-label.sm { font-size: 5.5px; }
-    .region-label.selected-lbl { fill: #fff; }
-
-    .hint-text {
-      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       font-size: 12px;
-      color: #a1a1aa;
-      padding: 10px;
-      font-weight: 500;
-    }
-
-    /* 선택된 지역 배지 */
-    .selected-chips {
-      display: flex; gap: 6px; flex-wrap: wrap;
-      padding: 0 16px 12px;
-      min-height: 36px;
-    }
-    .chip {
-      display: flex; align-items: center; gap: 4px;
-      background: #09090b; color: #fff;
-      border-radius: 99px; padding: 4px 10px;
-      font-size: 12px; font-weight: 600;
-    }
-    .chip-x {
-      cursor: pointer; font-size: 14px;
-      color: #a1a1aa; line-height: 1;
-    }
-    .chip-x:hover { color: #fff; }
-
-    .section-hd {
-      padding: 16px 16px 10px;
-      font-size: 13px; font-weight: 700; color: #09090b;
-    }
-
-    /* 빠른 지역 그리드 */
-    .quick-region-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      padding: 0 16px 16px;
-    }
-    .quick-card {
-      border: 1px solid #e5e5e5;
-      border-radius: 10px;
-      padding: 10px 6px;
-      text-align: center;
-      cursor: pointer;
-      transition: all .12s;
-      background: #fff;
-    }
-    .quick-card:hover { border-color: #09090b; background: #fafafa; }
-    .quick-card.sel { border-color: #09090b; background: #09090b; }
-    .quick-card .qc-name { font-size: 12px; font-weight: 600; color: #09090b; margin-top: 2px; }
-    .quick-card.sel .qc-name { color: #fff; }
-    .quick-card .qc-cnt  { font-size: 10px; color: #a1a1aa; margin-top: 1px; }
-    .quick-card.sel .qc-cnt  { color: #a1a1aa; }
-
-    /* ── 하단 탭바 ── */
-    .tab-bar {
-      position: sticky; bottom: 0;
-      background: #fff;
-      border-top: 1px solid #e5e5e5;
-      display: flex;
-    }
-    .tab-item {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; padding: 10px 0 12px;
-      font-size: 10px; font-weight: 600; color: #a1a1aa;
-      cursor: pointer; gap: 3px; transition: color .12s;
-    }
-    .tab-item .ti-icon { font-size: 20px; }
-    .tab-item.active { color: #09090b; }
-
-    /* ── 하단 고정 버튼 ── */
-    .bottom-bar {
-      position: sticky; bottom: 0;
-      background: #fff;
-      border-top: 1px solid #e5e5e5;
-      padding: 12px 16px 16px;
-    }
-    .btn-primary {
-      width: 100%; background: #09090b; color: #fff;
-      border: none; border-radius: 10px;
-      padding: 14px; font-size: 14px; font-weight: 600;
-      cursor: pointer; font-family: inherit;
-      transition: background .12s, transform .1s;
-    }
-    .btn-primary:hover { background: #27272a; }
-    .btn-primary:active { transform: scale(.99); }
-    .btn-primary:disabled { background: #e4e4e7; color: #a1a1aa; cursor: not-allowed; }
-    .btn-outline {
-      width: 100%; background: #fff; color: #09090b;
-      border: 1px solid #e5e5e5; border-radius: 10px;
-      padding: 12px; font-size: 14px; font-weight: 600;
-      cursor: pointer; font-family: inherit; margin-top: 8px;
-      transition: background .12s;
-    }
-    .btn-outline:hover { background: #fafafa; }
-
-    /* ════════════════════════════════
-       모달 — 시/군/구 선택
-    ════════════════════════════════ */
-    .modal-overlay {
-      display: none;
-      position: absolute; inset: 0; z-index: 100;
-      background: rgba(0,0,0,.5);
-      align-items: flex-end;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal-sheet {
-      width: 100%; background: #fff;
-      border-radius: 20px 20px 0 0;
-      max-height: 85%;
-      display: flex; flex-direction: column;
-      animation: slideUp .25s ease;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to   { transform: translateY(0); }
-    }
-    .modal-header {
-      display: flex; align-items: center;
-      padding: 16px 16px 12px;
-      border-bottom: 1px solid #e5e5e5;
-    }
-    .modal-title { font-size: 16px; font-weight: 700; color: #09090b; flex: 1; }
-    .modal-toggle-link {
-      font-size: 12px; font-weight: 600; color: #71717a;
-      cursor: pointer; margin-right: 12px;
-      text-decoration: underline;
-      background: none; border: none; font-family: inherit;
-    }
-    .modal-toggle-link:hover { color: #09090b; }
-    .modal-close {
-      width: 32px; height: 32px;
-      background: #f4f4f5; border: none; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 16px; color: #71717a;
-    }
-    .modal-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
-    .district-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-    }
-    .district-btn {
-      border: 1px solid #e5e5e5; border-radius: 8px;
-      padding: 10px 6px; text-align: center;
-      font-size: 12px; font-weight: 600; color: #09090b;
-      cursor: pointer; background: #fff;
-      transition: all .1s;
-    }
-    .district-btn:hover { border-color: #09090b; }
-    .district-btn.sel { border-color: #09090b; background: #09090b; color: #fff; }
-    .modal-footer {
-      padding: 12px 16px 16px;
-      border-top: 1px solid #e5e5e5;
-      display: flex; align-items: center; gap: 10px;
-    }
-    .all-check-label {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 13px; font-weight: 600; color: #09090b;
-      cursor: pointer;
-    }
-    .all-check-label input { width: 16px; height: 16px; accent-color: #09090b; }
-
-    /* 모달 SVG 지도 */
-    .district-map-wrap {
-      border: 1px solid #e5e5e5;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #fafafa;
-    }
-    .district-map-wrap svg {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    .dist-path {
-      fill: #f4f4f5;
-      stroke: #d4d4d8;
-      stroke-width: 0.5;
-      cursor: pointer;
-      transition: fill .15s;
-    }
-    .dist-path:hover { fill: #e4e4e7; }
-    .dist-path.sel { fill: #09090b; }
-    .dist-path.sel:hover { fill: #27272a; }
-    .dist-label {
-      font-size: 5px;
+      color: #4caf50;
       font-weight: 600;
-      fill: #52525b;
+      opacity: 0.6;
+      letter-spacing: 0.5px;
+    }
+    .map-pin {
+      position: absolute;
+      width: 28px; height: 28px;
+      background: #1B4332;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      cursor: pointer;
+    }
+    .map-pin::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+      width: 10px; height: 10px;
+      background: #fff;
+      border-radius: 50%;
+    }
+    .map-pin-fav {
+      background: #f59e0b;
+    }
+    .map-region-label {
+      position: absolute;
+      font-size: 10px;
+      font-weight: 700;
+      color: #2d6a4f;
+      background: rgba(255,255,255,0.75);
+      padding: 2px 6px;
+      border-radius: 4px;
       pointer-events: none;
-      font-family: 'Geist', sans-serif;
     }
-    .dist-label.sel { fill: #fff; }
+    .map-count-badge {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: #1B4332;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 99px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
 
-    /* ════════════════════════════════
-       화면 2 — 식당 리스트
-    ════════════════════════════════ */
-    .filter-bar {
-      display: flex; gap: 6px;
-      padding: 10px 16px; overflow-x: auto;
-    }
-    .filter-bar::-webkit-scrollbar { display: none; }
-    .filter-chip {
+    /* ── C: 최근 등록 맛집 미리보기 ── */
+    .recent-section {
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+      padding: 14px 0 12px;
       flex-shrink: 0;
-      border: 1px solid #e5e5e5; border-radius: 99px;
-      padding: 5px 12px; font-size: 12px; font-weight: 600;
-      color: #52525b; cursor: pointer; background: #fff;
-      font-family: inherit; transition: all .1s;
     }
-    .filter-chip.active {
-      border-color: #09090b; background: #09090b; color: #fff;
+    .recent-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a1a;
+      padding: 0 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-
-    .rest-list { padding: 0 16px 80px; }
-    .rest-card {
-      display: flex; gap: 12px;
-      padding: 14px 0;
-      border-bottom: 1px solid #f4f4f5;
+    .recent-title-more {
+      font-size: 11px;
+      font-weight: 500;
+      color: #1B4332;
+    }
+    .recent-scroll {
+      display: flex;
+      gap: 10px;
+      padding: 0 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .recent-scroll::-webkit-scrollbar { display: none; }
+    .recent-card {
+      flex-shrink: 0;
+      width: 110px;
+      background: #f9f9f9;
+      border: 1px solid #f0f0f0;
+      border-radius: 14px;
+      overflow: hidden;
       cursor: pointer;
     }
-    .rest-card:last-child { border-bottom: none; }
-    .rest-thumb {
-      width: 76px; height: 76px; border-radius: 10px;
-      background: #f4f4f5; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px; border: 1px solid #e5e5e5;
-    }
-    .rest-info { flex: 1; min-width: 0; }
-    .rest-name { font-size: 15px; font-weight: 700; color: #09090b; }
-    .rest-meta {
-      display: flex; align-items: center; gap: 6px; margin-top: 4px;
-    }
-    .badge {
-      font-size: 11px; font-weight: 600; color: #52525b;
-      background: #f4f4f5; border-radius: 4px; padding: 1px 6px;
-    }
-    .rest-addr { font-size: 12px; color: #a1a1aa; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .rest-rating { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
-    .stars { color: #f59e0b; font-size: 12px; }
-    .rating-val { font-size: 13px; font-weight: 700; color: #09090b; }
-    .review-cnt  { font-size: 12px; color: #a1a1aa; }
-
-    /* ════════════════════════════════
-       화면 3 — 식당 상세
-    ════════════════════════════════ */
-    .detail-img {
-      height: 220px; background: #f4f4f5;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 72px; position: relative;
-      border-bottom: 1px solid #e5e5e5;
-    }
-    .detail-img .abs-top-bar {
-      position: absolute; top: 0; left: 0; right: 0;
-      display: flex; align-items: center;
-      padding: 8px 12px; gap: 8px;
-    }
-    .ghost-btn {
-      width: 36px; height: 36px;
-      background: rgba(255,255,255,.85);
-      backdrop-filter: blur(8px);
-      border: none; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px; cursor: pointer;
-    }
-    .detail-body { padding: 18px 16px 0; }
-    .detail-badges { display: flex; gap: 6px; margin-bottom: 8px; }
-    .detail-name { font-size: 22px; font-weight: 800; color: #09090b; }
-
-    /* 이중 평점 */
-    .dual-rating {
-      display: flex; gap: 16px; margin-top: 10px; align-items: center;
-    }
-    .rating-block {
-      display: flex; align-items: center; gap: 5px;
-    }
-    .rating-block .rb-label {
-      font-size: 11px; font-weight: 600; color: #71717a;
-      background: #f4f4f5; border-radius: 4px; padding: 1px 6px;
-    }
-    .rating-block .rb-label.kakao {
-      background: #FEE500; color: #3C1E1E;
-    }
-    .rating-block .stars { font-size: 13px; }
-    .rating-block .rating-val { font-size: 16px; font-weight: 800; }
-    .rating-block .review-cnt { font-size: 12px; }
-
-    .divider { height: 1px; background: #f4f4f5; margin: 16px 0; }
-
-    .info-row {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 10px 0;
-    }
-    .info-icon { font-size: 16px; margin-top: 1px; color: #71717a; flex-shrink: 0; }
-    .info-text { font-size: 13px; color: #52525b; line-height: 1.5; }
-    .info-text strong { color: #09090b; font-weight: 600; }
-
-    .map-block {
-      border: 1px solid #e5e5e5; border-radius: 12px;
-      height: 130px; background: #fafafa;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 4px; color: #a1a1aa; margin: 12px 0 0;
-      cursor: pointer;
-    }
-    .map-block span { font-size: 13px; font-weight: 600; }
-
-    .sec-title {
-      font-size: 15px; font-weight: 700; color: #09090b;
-      padding: 18px 16px 10px;
-    }
-
-    .photo-row {
-      display: flex; gap: 8px;
-      padding: 0 16px 4px; overflow-x: auto;
-    }
-    .photo-row::-webkit-scrollbar { display: none; }
-    .photo-box {
-      flex-shrink: 0; width: 86px; height: 86px;
-      border-radius: 8px; background: #f4f4f5;
-      border: 1px solid #e5e5e5;
-      display: flex; align-items: center; justify-content: center;
+    .recent-card-thumb {
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 28px;
+      position: relative;
     }
-    .photo-add {
-      flex-shrink: 0; width: 86px; height: 86px;
-      border-radius: 8px; background: #fafafa;
-      border: 1px dashed #d4d4d8;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      font-size: 22px; color: #a1a1aa; gap: 2px; cursor: pointer;
+    .recent-card-heart {
+      position: absolute;
+      top: 5px; right: 7px;
+      font-size: 13px;
     }
-    .photo-add span { font-size: 10px; font-weight: 600; }
-
-    /* 리뷰 탭 */
-    .review-tabs {
-      display: flex; border-bottom: 2px solid #f4f4f5; margin: 0 16px;
+    .recent-card-body {
+      padding: 7px 8px 8px;
     }
-    .review-tab {
-      flex: 1; text-align: center; padding: 12px 0 10px;
-      font-size: 13px; font-weight: 600; color: #a1a1aa;
-      cursor: pointer; border-bottom: 2px solid transparent;
-      margin-bottom: -2px; transition: all .15s;
-      background: none; border-left: none; border-right: none; border-top: none;
-      font-family: inherit;
+    .recent-card-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #1a1a1a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
     }
-    .review-tab.active {
-      color: #09090b; border-bottom-color: #09090b;
-    }
-    .review-tab .tab-badge {
+    .recent-card-badge {
       display: inline-block;
-      font-size: 10px; font-weight: 700;
-      background: #f4f4f5; color: #71717a;
-      border-radius: 99px; padding: 1px 6px;
-      margin-left: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 99px;
     }
-    .review-tab.active .tab-badge {
-      background: #09090b; color: #fff;
-    }
-    .review-tab .kakao-icon {
-      display: inline-block;
-      background: #FEE500; color: #3C1E1E;
-      border-radius: 3px; padding: 0 4px;
-      font-size: 9px; font-weight: 800;
-      margin-right: 3px;
-      vertical-align: middle;
-    }
-    .review-panel { display: none; }
-    .review-panel.active { display: block; }
+    .badge-korean { background: #fff3e0; color: #e65100; }
+    .badge-japanese { background: #e3f2fd; color: #1565c0; }
+    .badge-dessert { background: #fce4ec; color: #ad1457; }
+    .badge-western { background: #f3e5f5; color: #6a1b9a; }
+    .badge-chinese { background: #fce4ec; color: #c62828; }
 
-    .review-item {
-      padding: 14px 16px;
-      border-bottom: 1px solid #f4f4f5;
+    /* ── 하단 탭 ── */
+    .bottom-nav {
+      position: sticky;
+      bottom: 0;
+      background: #fff;
+      border-top: 1px solid #efefef;
+      display: flex;
+      padding: 8px 0 12px;
+      flex-shrink: 0;
     }
-    .review-head {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      padding: 4px 0;
     }
-    .avatar {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: #09090b; color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 700; flex-shrink: 0;
+    .nav-icon-wrap {
+      width: 36px; height: 28px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
     }
-    .rv-name { font-size: 14px; font-weight: 700; color: #09090b; }
-    .rv-date { font-size: 11px; color: #a1a1aa; }
-    .rv-stars { color: #f59e0b; font-size: 12px; margin-left: auto; }
-    .mine-badge {
-      font-size: 10px; font-weight: 700; color: #52525b;
-      background: #f4f4f5; border-radius: 4px; padding: 1px 5px;
-      margin-left: 5px;
+    .nav-tab.active .nav-icon-wrap {
+      background: #1B4332;
     }
-    .kakao-badge {
-      font-size: 9px; font-weight: 800;
-      background: #FEE500; color: #3C1E1E;
-      border-radius: 3px; padding: 1px 5px;
-      margin-left: 5px;
+    .nav-tab.fav.active .nav-icon-wrap {
+      background: #fef9c3;
     }
-    .rv-text { font-size: 13px; color: #52525b; line-height: 1.6; }
-    .rv-actions { margin-top: 8px; display: flex; gap: 8px; }
-    .rv-act-btn {
-      font-size: 12px; font-weight: 600; color: #71717a;
-      background: none; border: none; cursor: pointer;
-      font-family: inherit; padding: 0;
+    .nav-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #aaa;
     }
-    .rv-act-btn:hover { color: #09090b; }
+    .nav-tab.active .nav-label { color: #1B4332; }
+    .nav-tab.fav.active .nav-label { color: #d97706; }
 
-    /* ════════════════════════════════
-       화면 4 — 후기 작성
-    ════════════════════════════════ */
-    .write-body { padding: 16px 16px 80px; }
-    .write-target {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px; border: 1px solid #e5e5e5;
-      border-radius: 12px; margin-bottom: 24px;
+    /* ── 범례 ── */
+    .label-box {
+      max-width: 340px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.08);
+      align-self: flex-start;
+      margin-top: 44px;
     }
-    .wt-thumb {
-      width: 44px; height: 44px; border-radius: 8px;
-      background: #f4f4f5; border: 1px solid #e5e5e5;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
+    .label-box h2 {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1B4332;
+      margin-bottom: 16px;
     }
-    .wt-name { font-size: 14px; font-weight: 700; color: #09090b; }
-    .wt-sub  { font-size: 12px; color: #a1a1aa; margin-top: 2px; }
-
-    .form-label { font-size: 13px; font-weight: 600; color: #09090b; margin-bottom: 8px; display: block; }
-
-    .star-row { display: flex; gap: 6px; margin-bottom: 20px; }
-    .star-btn {
-      font-size: 30px; cursor: pointer;
-      filter: grayscale(1) brightness(1.5);
-      transition: filter .1s, transform .12s;
-      border: none; background: none; padding: 0;
+    .label-section {
+      margin-bottom: 18px;
     }
-    .star-btn.lit { filter: none; }
-    .star-btn:hover { transform: scale(1.2); }
-
-    .review-ta {
-      width: 100%; border: 1px solid #e5e5e5; border-radius: 10px;
-      padding: 12px 14px; font-size: 14px; min-height: 120px;
-      resize: none; outline: none; font-family: inherit;
-      color: #09090b; background: #fff; line-height: 1.6;
-      transition: border-color .12s;
+    .label-section h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .review-ta:focus { border-color: #09090b; }
-
-    .upload-zone {
-      margin-top: 16px; border: 1.5px dashed #d4d4d8;
-      border-radius: 12px; padding: 24px;
-      text-align: center; cursor: pointer; color: #a1a1aa;
-      transition: border-color .15s, color .15s;
+    .label-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: #1B4332;
+      color: #fff;
     }
-    .upload-zone:hover { border-color: #09090b; color: #09090b; }
-    .upload-zone .u-icon { font-size: 28px; margin-bottom: 6px; }
-    .upload-zone p { font-size: 13px; font-weight: 600; }
-    .upload-zone small { font-size: 11px; color: #a1a1aa; margin-top: 2px; display: block; }
-
-    /* ── 구분선 라벨 ── */
-    .label-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 0 16px 6px;
+    .label-section ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
-    .label-text { font-size: 11px; font-weight: 600; color: #a1a1aa; white-space: nowrap; }
-    .label-line { flex: 1; height: 1px; background: #f4f4f5; }
+    .label-section ul li {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.5;
+      padding-left: 12px;
+      position: relative;
+    }
+    .label-section ul li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #1B4332;
+    }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════
-     폰 1: 지역 선택
-══════════════════════ -->
-<div class="phone">
-  <div class="notch"><div class="notch-bar"></div></div>
-  <div class="screen">
+  <!-- ── 폰 목업 ── -->
+  <div class="phone">
+    <div class="notch"><div class="notch-bar"></div></div>
+    <div class="screen">
 
-    <!-- 화면 1: 지역 선택 -->
-    <div class="view active" id="v-region">
-      <div class="top-bar">
-        <span class="app-title">맛집 지도</span>
-        <button class="icon-btn">🔍</button>
-      </div>
-
-      <!-- SVG 지도 -->
-      <div class="map-container">
-        <div class="map-label">시/도를 클릭하여 선택하세요</div>
-        <div class="korea-svg-wrap">
-          <!-- 대한민국 행정구역 SVG 지도 (실제 형태 근사) -->
-          <svg viewBox="0 0 310 430" xmlns="http://www.w3.org/2000/svg">
-            <!-- 강원도 — 북동부, 넓고 산악지형 -->
-            <path id="rp-gw" class="region-path" onclick="selectProvince('강원도')"
-              d="M155,18 L175,15 L200,12 L230,18 L255,30 L268,50 L272,75 L265,100 L255,120 L240,135 L225,140 L210,138 L195,130 L182,120 L175,108 L170,95 L168,80 L160,65 L155,45 Z"/>
-            <text class="region-label" x="215" y="78" text-anchor="middle">강원</text>
-
-            <!-- 경기도 — 서울을 둘러싸는 큰 지역 -->
-            <path id="rp-gg" class="region-path" onclick="selectProvince('경기도')"
-              d="M70,30 L95,22 L120,20 L145,18 L155,18 L155,45 L160,65 L168,80 L170,95 L175,108 L182,120 L175,132 L165,140 L155,145 L145,148 L138,155 L130,148 L120,145 L108,148 L95,145 L85,138 L75,125 L65,110 L60,95 L55,78 L58,60 L62,42 Z"/>
-            <text class="region-label" x="112" y="85" text-anchor="middle">경기</text>
-
-            <!-- 서울특별시 — 경기 안, 작은 영역 -->
-            <path id="rp-seoul" class="region-path metro" onclick="selectProvince('서울특별시')"
-              d="M108,68 L118,64 L128,66 L134,72 L132,80 L126,86 L118,88 L110,84 L106,78 Z"/>
-            <text class="region-label sm" x="120" y="78" text-anchor="middle">서울</text>
-
-            <!-- 인천광역시 — 경기 서쪽 해안 -->
-            <path id="rp-ic" class="region-path metro" onclick="selectProvince('인천광역시')"
-              d="M52,70 L62,62 L70,66 L75,75 L72,85 L65,92 L55,90 L48,82 Z"/>
-            <text class="region-label sm" x="62" y="79" text-anchor="middle">인천</text>
-
-            <!-- 충청북도 — 내륙 중부 -->
-            <path id="rp-cb" class="region-path" onclick="selectProvince('충청북도')"
-              d="M145,148 L155,145 L165,140 L175,132 L182,120 L195,130 L205,138 L210,148 L208,165 L200,178 L190,188 L178,192 L168,188 L155,180 L145,172 L138,162 L138,155 Z"/>
-            <text class="region-label" x="175" y="163" text-anchor="middle">충북</text>
-
-            <!-- 세종특별자치시 — 충남/충북 경계 작은 영역 -->
-            <path id="rp-sj" class="region-path metro" onclick="selectProvince('세종특별자치시')"
-              d="M130,168 L138,162 L145,172 L142,180 L135,182 L128,176 Z"/>
-            <text class="region-label sm" x="136" y="175" text-anchor="middle">세종</text>
-
-            <!-- 충청남도 — 서해안 중부 -->
-            <path id="rp-cn" class="region-path" onclick="selectProvince('충청남도')"
-              d="M50,118 L65,110 L75,125 L85,138 L95,145 L108,148 L120,145 L130,148 L138,155 L138,162 L130,168 L128,176 L135,182 L142,180 L145,188 L140,198 L130,208 L118,212 L105,210 L90,205 L75,195 L62,180 L50,160 L42,140 Z"/>
-            <text class="region-label" x="95" y="172" text-anchor="middle">충남</text>
-
-            <!-- 대전광역시 — 충남/충북 경계 -->
-            <path id="rp-dj" class="region-path metro" onclick="selectProvince('대전광역시')"
-              d="M142,188 L152,185 L158,192 L155,200 L148,203 L140,198 Z"/>
-            <text class="region-label sm" x="149" y="196" text-anchor="middle">대전</text>
-
-            <!-- 경상북도 — 동부 대형 -->
-            <path id="rp-gb" class="region-path" onclick="selectProvince('경상북도')"
-              d="M210,138 L225,140 L240,135 L255,120 L265,130 L272,145 L275,165 L270,185 L262,205 L255,218 L245,228 L235,232 L225,228 L218,220 L208,225 L200,218 L195,205 L192,195 L195,182 L200,170 L205,155 L208,148 Z"/>
-            <text class="region-label" x="240" y="178" text-anchor="middle">경북</text>
-
-            <!-- 대구광역시 — 경북 남부 내 -->
-            <path id="rp-daegu" class="region-path metro" onclick="selectProvince('대구광역시')"
-              d="M218,208 L228,205 L235,212 L232,220 L225,223 L218,218 Z"/>
-            <text class="region-label sm" x="226" y="216" text-anchor="middle">대구</text>
-
-            <!-- 전라북도 — 서남부 -->
-            <path id="rp-jb" class="region-path" onclick="selectProvince('전라북도')"
-              d="M48,208 L62,200 L75,195 L90,205 L105,210 L118,212 L130,208 L140,198 L148,203 L155,200 L158,210 L155,225 L148,240 L138,250 L125,258 L110,260 L95,255 L78,248 L62,238 L48,225 Z"/>
-            <text class="region-label" x="105" y="232" text-anchor="middle">전북</text>
-
-            <!-- 경상남도 — 남동부 -->
-            <path id="rp-gn" class="region-path" onclick="selectProvince('경상남도')"
-              d="M155,255 L168,248 L180,245 L192,248 L200,252 L208,258 L218,255 L225,248 L235,245 L245,250 L250,262 L248,278 L242,290 L232,300 L220,305 L208,302 L198,295 L188,298 L178,295 L168,288 L158,282 L150,272 L148,262 Z"/>
-            <text class="region-label" x="200" y="278" text-anchor="middle">경남</text>
-
-            <!-- 울산광역시 — 경남 동북쪽 해안 -->
-            <path id="rp-us" class="region-path metro" onclick="selectProvince('울산광역시')"
-              d="M245,228 L255,222 L262,230 L260,242 L252,248 L245,245 L242,238 Z"/>
-            <text class="region-label sm" x="252" y="238" text-anchor="middle">울산</text>
-
-            <!-- 부산광역시 — 남동쪽 끝 -->
-            <path id="rp-busan" class="region-path metro" onclick="selectProvince('부산광역시')"
-              d="M235,290 L245,285 L255,290 L258,302 L250,310 L240,308 L232,300 Z"/>
-            <text class="region-label sm" x="246" y="300" text-anchor="middle">부산</text>
-
-            <!-- 창원/김해 사이에 위치 조정 -->
-
-            <!-- 전라남도 — 서남단 -->
-            <path id="rp-jn" class="region-path" onclick="selectProvince('전라남도')"
-              d="M38,258 L55,250 L70,248 L85,252 L95,255 L110,260 L125,258 L138,250 L148,262 L150,272 L145,285 L135,298 L120,310 L105,318 L88,322 L72,318 L58,310 L45,298 L35,282 Z"/>
-            <text class="region-label" x="95" y="288" text-anchor="middle">전남</text>
-
-            <!-- 광주광역시 — 전남 북부 내 -->
-            <path id="rp-gj" class="region-path metro" onclick="selectProvince('광주광역시')"
-              d="M105,262 L115,258 L122,265 L118,274 L110,276 L103,270 Z"/>
-            <text class="region-label sm" x="113" y="268" text-anchor="middle">광주</text>
-
-            <!-- 제주특별자치도 — 남해 아래 섬 -->
-            <path id="rp-jeju" class="region-path" onclick="selectProvince('제주특별자치도')"
-              d="M72,375 L95,368 L120,365 L142,368 L155,375 L158,385 L150,395 L135,400 L115,402 L95,400 L78,395 L68,388 Z"/>
-            <text class="region-label" x="115" y="386" text-anchor="middle">제주</text>
-
-            <!-- 연결 관계 보조: 서해 바다 표시선 (선택적) -->
+      <!-- D: 확장 헤더 -->
+      <div class="header">
+        <div class="header-top">
+          <div class="header-greeting">안녕하세요 👋 <span>혁기님</span></div>
+          <div class="header-stats">
+            <div class="header-stats-dot"></div>
+            <span class="header-stats-text">47개 맛집</span>
+          </div>
+        </div>
+        <div class="header-search">
+          <svg class="header-search-icon" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          <div class="hint-text">시/도를 클릭하면 세부 지역을 선택할 수 있어요</div>
+          <span class="header-search-text">맛집 이름, 지역으로 검색</span>
         </div>
       </div>
 
-      <!-- 선택된 지역 표시 -->
-      <div class="selected-chips" id="sel-chips">
-        <!-- JS로 동적 생성 -->
+      <!-- B: 카테고리 칩 -->
+      <div class="category-bar">
+        <div class="chip chip-all active">🗺️ 전체</div>
+        <div class="chip chip-korean">🍚 한식</div>
+        <div class="chip chip-chinese">🥟 중식</div>
+        <div class="chip chip-japanese">🍱 일식</div>
+        <div class="chip chip-western">🍝 양식</div>
+        <div class="chip chip-dessert">🍰 디저트</div>
       </div>
 
-      <div class="section-hd">자주 찾는 지역</div>
-      <div class="quick-region-grid">
-        <div class="quick-card" onclick="quickSelect(this, '강남구')">
-          <div class="qc-name">강남</div>
-          <div class="qc-cnt">24곳</div>
-        </div>
-        <div class="quick-card" onclick="quickSelect(this, '마포구')">
-          <div class="qc-name">홍대</div>
-          <div class="qc-cnt">18곳</div>
-        </div>
-        <div class="quick-card" onclick="quickSelect(this, '종로구')">
-          <div class="qc-name">종로</div>
-          <div class="qc-cnt">15곳</div>
-        </div>
-        <div class="quick-card" onclick="quickSelect(this, '성수동')">
-          <div class="qc-name">성수</div>
-          <div class="qc-cnt">21곳</div>
-        </div>
-        <div class="quick-card" onclick="quickSelect(this, '이태원')">
-          <div class="qc-name">이태원</div>
-          <div class="qc-cnt">12곳</div>
-        </div>
-        <div class="quick-card" onclick="quickSelect(this, '여의도')">
-          <div class="qc-name">여의도</div>
-          <div class="qc-cnt">9곳</div>
-        </div>
-        <div class="quick-card" onclick="quickSelect(this, '신촌')">
-          <div class="qc-name">신촌</div>
-          <div class="qc-cnt">11곳</div>
-        </div>
-        <div class="quick-card" onclick="quickSelect(this, '을지로')">
-          <div class="qc-name">을지로</div>
-          <div class="qc-cnt">8곳</div>
-        </div>
+      <!-- 지도 영역 -->
+      <div class="map-area">
+        <!-- 간단 SVG 한국 지도 실루엣 -->
+        <svg class="map-svg" viewBox="0 0 390 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="mapGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#d1fae5"/>
+              <stop offset="100%" stop-color="#a7f3d0"/>
+            </linearGradient>
+          </defs>
+          <!-- 한국 대략적 윤곽 -->
+          <path d="M170,20 L220,18 L255,30 L270,55 L265,90 L275,120 L268,155
+                   L255,180 L240,200 L230,230 L215,250 L200,260 L185,250
+                   L168,235 L155,210 L148,185 L138,160 L130,130 L125,95
+                   L130,60 L145,35 Z"
+            fill="url(#mapGrad)" stroke="#6ee7b7" stroke-width="1.5" opacity="0.85"/>
+          <!-- 제주도 -->
+          <ellipse cx="180" cy="272" rx="22" ry="10" fill="#b7e4c7" stroke="#6ee7b7" stroke-width="1"/>
+          <!-- 지역 경계선 (간략) -->
+          <line x1="140" y1="100" x2="270" y2="100" stroke="#86efac" stroke-width="0.7" stroke-dasharray="4,3"/>
+          <line x1="138" y1="160" x2="268" y2="155" stroke="#86efac" stroke-width="0.7" stroke-dasharray="4,3"/>
+        </svg>
+
+        <!-- 지역명 라벨 -->
+        <div class="map-region-label" style="top:42px;left:178px;">서울</div>
+        <div class="map-region-label" style="top:70px;left:200px;">경기</div>
+        <div class="map-region-label" style="top:118px;left:155px;">충청</div>
+        <div class="map-region-label" style="top:118px;left:208px;">강원</div>
+        <div class="map-region-label" style="top:175px;left:148px;">전라</div>
+        <div class="map-region-label" style="top:170px;left:205px;">경상</div>
+
+        <!-- 핀들 -->
+        <div class="map-pin" style="top:46px;left:178px;"></div>
+        <div class="map-pin map-pin-fav" style="top:130px;left:160px;"></div>
+        <div class="map-pin" style="top:155px;left:215px;"></div>
+        <div class="map-pin map-pin-fav" style="top:78px;left:195px;"></div>
+
+        <div class="map-count-badge">📍 47개 맛집</div>
       </div>
 
-      <div class="bottom-bar">
-        <button class="btn-primary" id="confirm-btn" disabled onclick="goScreen('v-list')">선택 확정</button>
-      </div>
-
-      <!-- 시/군/구 선택 모달 -->
-      <div class="modal-overlay" id="district-modal">
-        <div class="modal-sheet">
-          <div class="modal-header">
-            <span class="modal-title" id="modal-prov-name">경기도</span>
-            <button class="modal-toggle-link" id="modal-view-toggle" onclick="toggleModalView()">리스트로 보기</button>
-            <button class="modal-close" onclick="closeModal()">✕</button>
-          </div>
-          <div class="modal-body">
-            <!-- SVG 지도 뷰 -->
-            <div id="district-map-view">
-              <div class="district-map-wrap" id="district-map-container">
-                <!-- JS가 시/도별 SVG를 삽입 -->
-              </div>
-            </div>
-            <!-- 리스트 뷰 (기본 숨김) -->
-            <div id="district-list-view" style="display:none;">
-              <div class="district-grid" id="district-grid">
-                <!-- JS로 생성 -->
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <label class="all-check-label">
-              <input type="checkbox" id="all-check" onchange="toggleAll(this)" />
-              전체 선택
-            </label>
-            <button class="btn-primary" style="flex:1; margin-top:0;" onclick="confirmDistrict()">선택 확정</button>
-          </div>
+      <!-- C: 최근 등록 맛집 미리보기 -->
+      <div class="recent-section">
+        <div class="recent-title">
+          <span>최근 등록 맛집</span>
+          <span class="recent-title-more">전체 보기 →</span>
         </div>
-      </div>
-    </div><!-- /v-region -->
-
-  </div><!-- /screen -->
-</div><!-- /phone -->
-
-<!-- ══════════════════════
-     폰 2: 식당 리스트
-══════════════════════ -->
-<div class="phone">
-  <div class="notch"><div class="notch-bar"></div></div>
-  <div class="screen">
-    <div class="view active" id="v-list">
-      <div class="top-bar">
-        <button class="back-btn">←</button>
-        <h2>강남구 맛집 <span style="color:#a1a1aa;font-weight:500">24</span></h2>
-        <button class="icon-btn">⚙️</button>
-      </div>
-
-      <div class="filter-bar">
-        <button class="filter-chip active" onclick="setChip(this)">전체</button>
-        <button class="filter-chip" onclick="setChip(this)">한식</button>
-        <button class="filter-chip" onclick="setChip(this)">일식</button>
-        <button class="filter-chip" onclick="setChip(this)">중식</button>
-        <button class="filter-chip" onclick="setChip(this)">양식</button>
-        <button class="filter-chip" onclick="setChip(this)">디저트</button>
-        <button class="filter-chip" onclick="setChip(this)">기타</button>
-      </div>
-
-      <div class="label-row">
-        <span class="label-text">평점순</span>
-        <div class="label-line"></div>
-      </div>
-
-      <div class="rest-list">
-        <div class="rest-card" onclick="goScreen2('v-detail')">
-          <div class="rest-thumb">🍣</div>
-          <div class="rest-info">
-            <div class="rest-name">스시 오마카세 료</div>
-            <div class="rest-meta">
-              <span class="badge">일식</span>
-              <span style="font-size:11px;color:#a1a1aa">청담동</span>
+        <div class="recent-scroll">
+          <div class="recent-card">
+            <div class="recent-card-thumb" style="background:#fff3e0;">
+              🍚
+              <span class="recent-card-heart">🤍</span>
             </div>
-            <div class="rest-addr">서울 강남구 청담동 14-5</div>
-            <div class="rest-rating">
-              <span class="stars">★★★★★</span>
-              <span class="rating-val">4.9</span>
-              <span class="review-cnt">리뷰 12</span>
+            <div class="recent-card-body">
+              <div class="recent-card-name">진미식당</div>
+              <span class="recent-card-badge badge-korean">한식</span>
             </div>
           </div>
-        </div>
-
-        <div class="rest-card" onclick="goScreen2('v-detail')">
-          <div class="rest-thumb">🥩</div>
-          <div class="rest-info">
-            <div class="rest-name">강남 삼겹살 명가</div>
-            <div class="rest-meta">
-              <span class="badge">한식</span>
-              <span style="font-size:11px;color:#a1a1aa">역삼동</span>
+          <div class="recent-card">
+            <div class="recent-card-thumb" style="background:#e3f2fd;">
+              🍱
+              <span class="recent-card-heart">💛</span>
             </div>
-            <div class="rest-addr">서울 강남구 역삼동 823</div>
-            <div class="rest-rating">
-              <span class="stars">★★★★☆</span>
-              <span class="rating-val">4.5</span>
-              <span class="review-cnt">리뷰 8</span>
+            <div class="recent-card-body">
+              <div class="recent-card-name">스시하나</div>
+              <span class="recent-card-badge badge-japanese">일식</span>
             </div>
           </div>
-        </div>
-
-        <div class="rest-card" onclick="goScreen2('v-detail')">
-          <div class="rest-thumb">🍰</div>
-          <div class="rest-info">
-            <div class="rest-name">카페 블랑</div>
-            <div class="rest-meta">
-              <span class="badge">디저트</span>
-              <span style="font-size:11px;color:#a1a1aa">압구정</span>
+          <div class="recent-card">
+            <div class="recent-card-thumb" style="background:#fce4ec;">
+              🍰
+              <span class="recent-card-heart">🤍</span>
             </div>
-            <div class="rest-addr">서울 강남구 압구정로 88</div>
-            <div class="rest-rating">
-              <span class="stars">★★★★★</span>
-              <span class="rating-val">4.8</span>
-              <span class="review-cnt">리뷰 21</span>
+            <div class="recent-card-body">
+              <div class="recent-card-name">카페 솔</div>
+              <span class="recent-card-badge badge-dessert">디저트</span>
             </div>
           </div>
-        </div>
-
-        <div class="rest-card" onclick="goScreen2('v-detail')">
-          <div class="rest-thumb">🍝</div>
-          <div class="rest-info">
-            <div class="rest-name">파스타 일 포르노</div>
-            <div class="rest-meta">
-              <span class="badge">양식</span>
-              <span style="font-size:11px;color:#a1a1aa">논현동</span>
+          <div class="recent-card">
+            <div class="recent-card-thumb" style="background:#f3e5f5;">
+              🍝
+              <span class="recent-card-heart">💛</span>
             </div>
-            <div class="rest-addr">서울 강남구 논현동 200-3</div>
-            <div class="rest-rating">
-              <span class="stars">★★★★☆</span>
-              <span class="rating-val">4.3</span>
-              <span class="review-cnt">리뷰 5</span>
+            <div class="recent-card-body">
+              <div class="recent-card-name">파스타노</div>
+              <span class="recent-card-badge badge-western">양식</span>
             </div>
           </div>
-        </div>
-
-        <div class="rest-card" onclick="goScreen2('v-detail')">
-          <div class="rest-thumb">🍜</div>
-          <div class="rest-info">
-            <div class="rest-name">딤섬하우스</div>
-            <div class="rest-meta">
-              <span class="badge">중식</span>
-              <span style="font-size:11px;color:#a1a1aa">학동</span>
+          <div class="recent-card">
+            <div class="recent-card-thumb" style="background:#fce4ec;">
+              🥟
+              <span class="recent-card-heart">🤍</span>
             </div>
-            <div class="rest-addr">서울 강남구 학동로 11</div>
-            <div class="rest-rating">
-              <span class="stars">★★★★☆</span>
-              <span class="rating-val">4.2</span>
-              <span class="review-cnt">리뷰 7</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="rest-card" onclick="goScreen2('v-detail')">
-          <div class="rest-thumb">🍔</div>
-          <div class="rest-info">
-            <div class="rest-name">버거 앤 크래프트</div>
-            <div class="rest-meta">
-              <span class="badge">양식</span>
-              <span style="font-size:11px;color:#a1a1aa">삼성동</span>
-            </div>
-            <div class="rest-addr">서울 강남구 삼성동 155</div>
-            <div class="rest-rating">
-              <span class="stars">★★★★☆</span>
-              <span class="rating-val">4.1</span>
-              <span class="review-cnt">리뷰 3</span>
+            <div class="recent-card-body">
+              <div class="recent-card-name">황금반점</div>
+              <span class="recent-card-badge badge-chinese">중식</span>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- 하단 탭 -->
+      <div class="bottom-nav">
+        <div class="nav-tab active">
+          <div class="nav-icon-wrap">🗺️</div>
+          <span class="nav-label" style="color:#1B4332;">지도</span>
+        </div>
+        <div class="nav-tab">
+          <div class="nav-icon-wrap">📍</div>
+          <span class="nav-label">카카오맵</span>
+        </div>
+        <div class="nav-tab fav">
+          <div class="nav-icon-wrap">🤍</div>
+          <span class="nav-label">즐겨찾기</span>
+        </div>
+        <div class="nav-tab">
+          <div class="nav-icon-wrap">👤</div>
+          <span class="nav-label">마이페이지</span>
+        </div>
+      </div>
+
+    </div><!-- /screen -->
+  </div><!-- /phone -->
+
+  <!-- ── 범례 ── -->
+  <div class="label-box">
+    <h2>🎨 지도 페이지 개선안</h2>
+
+    <div class="label-section">
+      <h3><span class="label-badge">D</span> 헤더 확장</h3>
+      <ul>
+        <li>닉네임 포함 인사말 ("안녕하세요 👋 혁기님")</li>
+        <li>총 등록 맛집 수 뱃지 (실시간 카운트)</li>
+        <li>검색창 — 맛집 이름·지역 키워드 검색</li>
+        <li>진한 그린 배경으로 브랜드 강조</li>
+      </ul>
+    </div>
+
+    <div class="label-section">
+      <h3><span class="label-badge">B</span> 카테고리 바로가기 칩</h3>
+      <ul>
+        <li>지도 위 고정 영역 — 가로 스크롤</li>
+        <li>전체 / 한식 / 중식 / 일식 / 양식 / 디저트</li>
+        <li>탭 선택 시 지도 핀 + 미리보기 카드 필터링</li>
+        <li>카테고리별 고유 색상 (한식=주황, 일식=파랑 등)</li>
+      </ul>
+    </div>
+
+    <div class="label-section">
+      <h3><span class="label-badge">C</span> 최근 등록 맛집 미리보기</h3>
+      <ul>
+        <li>지도 아래 가로 스크롤 카드 리스트</li>
+        <li>카테고리 이모지 썸네일 + 이름 + 카테고리 뱃지</li>
+        <li>즐겨찾기 여부 하트 아이콘 (💛 = 즐겨찾기)</li>
+        <li>"전체 보기 →" 버튼으로 맛집 목록 페이지 이동</li>
+        <li>최신 5~6개 표시 (DB에서 created_at desc 쿼리)</li>
+      </ul>
     </div>
   </div>
-</div>
 
-<!-- ══════════════════════
-     폰 3: 식당 상세
-══════════════════════ -->
-<div class="phone">
-  <div class="notch"><div class="notch-bar"></div></div>
-  <div class="screen">
-    <div class="view active" id="v-detail">
-      <div class="detail-img">
-        🍣
-        <div class="abs-top-bar">
-          <button class="ghost-btn">←</button>
-          <div style="flex:1"></div>
-          <button class="ghost-btn">⬆️</button>
-        </div>
-      </div>
-
-      <div class="detail-body">
-        <div class="detail-badges">
-          <span class="badge">일식</span>
-          <span class="badge">오마카세</span>
-        </div>
-        <div class="detail-name">스시 오마카세 료</div>
-
-        <!-- 이중 평점: 카카오 / 우리 -->
-        <div class="dual-rating">
-          <div class="rating-block">
-            <span class="rb-label kakao">K</span>
-            <span class="stars">★★★★☆</span>
-            <span class="rating-val">4.3</span>
-            <span class="review-cnt">(128)</span>
-          </div>
-          <div class="rating-block">
-            <span class="rb-label">우리</span>
-            <span class="stars">★★★★★</span>
-            <span class="rating-val">4.9</span>
-            <span class="review-cnt">(12)</span>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="info-row">
-          <span class="info-icon">📍</span>
-          <div class="info-text">서울특별시 강남구 청담동 14-5<br><strong>도산대로 2길 14</strong></div>
-        </div>
-        <div class="info-row">
-          <span class="info-icon">🕐</span>
-          <div class="info-text">매일 11:30 – 22:00&nbsp;&nbsp;<strong style="color:#ef4444">일요일 휴무</strong></div>
-        </div>
-        <div class="info-row">
-          <span class="info-icon">💰</span>
-          <div class="info-text">1인 <strong>150,000 – 250,000원</strong></div>
-        </div>
-
-        <div class="map-block">
-          <span style="font-size:24px">🗺</span>
-          <span>지도에서 위치 보기 (카카오맵)</span>
-        </div>
-      </div>
-
-      <div class="sec-title">사진</div>
-      <div class="photo-row">
-        <div class="photo-box">🍣</div>
-        <div class="photo-box">🍱</div>
-        <div class="photo-box">🥢</div>
-        <div class="photo-box">🍶</div>
-        <div class="photo-add">
-          <span>➕</span>
-          <span>사진 추가</span>
-        </div>
-      </div>
-
-      <!-- 리뷰 탭 -->
-      <div class="review-tabs">
-        <button class="review-tab active" onclick="switchReviewTab('kakao', this)">
-          <span class="kakao-icon">K</span>카카오 리뷰<span class="tab-badge">128</span>
-        </button>
-        <button class="review-tab" onclick="switchReviewTab('ours', this)">
-          우리 리뷰<span class="tab-badge">12</span>
-        </button>
-      </div>
-
-      <!-- 카카오 리뷰 패널 -->
-      <div class="review-panel active" id="panel-kakao">
-        <div class="review-item">
-          <div class="review-head">
-            <div class="avatar" style="background:#FEE500;color:#3C1E1E">K</div>
-            <div>
-              <div class="rv-name">카카오 사용자 <span class="kakao-badge">카카오맵</span></div>
-              <div class="rv-date">2026.03.28</div>
-            </div>
-            <span class="rv-stars">★★★★★</span>
-          </div>
-          <div class="rv-text">청담동 오마카세 중에 가성비 최고입니다. 런치 코스 강추해요!</div>
-        </div>
-        <div class="review-item">
-          <div class="review-head">
-            <div class="avatar" style="background:#FEE500;color:#3C1E1E">K</div>
-            <div>
-              <div class="rv-name">카카오 사용자 <span class="kakao-badge">카카오맵</span></div>
-              <div class="rv-date">2026.03.22</div>
-            </div>
-            <span class="rv-stars">★★★★☆</span>
-          </div>
-          <div class="rv-text">스시 퀄리티는 좋은데 웨이팅이 좀 있어요. 예약하고 가세요.</div>
-        </div>
-        <div class="review-item">
-          <div class="review-head">
-            <div class="avatar" style="background:#FEE500;color:#3C1E1E">K</div>
-            <div>
-              <div class="rv-name">카카오 사용자 <span class="kakao-badge">카카오맵</span></div>
-              <div class="rv-date">2026.03.18</div>
-            </div>
-            <span class="rv-stars">★★★★☆</span>
-          </div>
-          <div class="rv-text">분위기 좋고 셰프님 친절합니다. 디너 코스는 좀 비싼 편.</div>
-        </div>
-      </div>
-
-      <!-- 우리 리뷰 패널 -->
-      <div class="review-panel" id="panel-ours">
-        <div class="review-item">
-          <div class="review-head">
-            <div class="avatar">나</div>
-            <div>
-              <div class="rv-name">손혁기 <span class="mine-badge">내 리뷰</span></div>
-              <div class="rv-date">2026.03.20</div>
-            </div>
-            <span class="rv-stars">★★★★★</span>
-          </div>
-          <div class="rv-text">오마카세 중 가장 가성비가 좋은 것 같아요. 숙성 방어가 특히 기가 막혔고, 셰프님이 친절하게 설명해 주셔서 더 맛있게 먹었습니다.</div>
-          <div class="rv-actions">
-            <button class="rv-act-btn">✏ 수정</button>
-            <button class="rv-act-btn">🗑 삭제</button>
-          </div>
-        </div>
-
-        <div class="review-item">
-          <div class="review-head">
-            <div class="avatar" style="background:#16a34a">지</div>
-            <div>
-              <div class="rv-name">김지수</div>
-              <div class="rv-date">2026.03.15</div>
-            </div>
-            <span class="rv-stars">★★★★★</span>
-          </div>
-          <div class="rv-text">혁기 오빠가 추천해줘서 왔는데 정말 인생 오마카세였어요! 코스 마지막 계란찜이 완벽했습니다.</div>
-        </div>
-
-        <div class="review-item">
-          <div class="review-head">
-            <div class="avatar" style="background:#2563eb">박</div>
-            <div>
-              <div class="rv-name">박민준</div>
-              <div class="rv-date">2026.03.10</div>
-            </div>
-            <span class="rv-stars">★★★★☆</span>
-          </div>
-          <div class="rv-text">음식은 진짜 맛있는데 웨이팅이 좀 있어요. 예약 필수입니다!</div>
-        </div>
-      </div>
-
-      <div class="bottom-bar">
-        <button class="btn-primary" onclick="goScreen3('v-write')">후기 작성하기</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════
-     폰 4: 후기 작성
-══════════════════════ -->
-<div class="phone">
-  <div class="notch"><div class="notch-bar"></div></div>
-  <div class="screen">
-    <div class="view active" id="v-write">
-      <div class="top-bar">
-        <button class="back-btn" onclick="goScreen3('v-detail')">←</button>
-        <h2>후기 작성</h2>
-      </div>
-
-      <div class="write-body">
-        <div class="write-target">
-          <div class="wt-thumb">🍣</div>
-          <div>
-            <div class="wt-name">스시 오마카세 료</div>
-            <div class="wt-sub">일식 · 강남구 청담동</div>
-          </div>
-        </div>
-
-        <label class="form-label">별점</label>
-        <div class="star-row" id="star-row">
-          <button class="star-btn lit" onclick="setStar3(1)">⭐</button>
-          <button class="star-btn lit" onclick="setStar3(2)">⭐</button>
-          <button class="star-btn lit" onclick="setStar3(3)">⭐</button>
-          <button class="star-btn lit" onclick="setStar3(4)">⭐</button>
-          <button class="star-btn lit" onclick="setStar3(5)">⭐</button>
-        </div>
-
-        <label class="form-label">방문 후기</label>
-        <textarea class="review-ta" placeholder="맛, 분위기, 서비스 등 솔직한 후기를 남겨주세요"></textarea>
-
-        <div class="upload-zone">
-          <div class="u-icon">📷</div>
-          <p>사진 추가하기</p>
-          <small>최대 10장</small>
-        </div>
-      </div>
-
-      <div class="bottom-bar">
-        <button class="btn-primary">후기 등록</button>
-        <button class="btn-outline">취소</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-/* ══════════════════════════════════════
-   시/도 → 시/군/구 데이터
-══════════════════════════════════════ */
-const provinceDists = {
-  '서울특별시': ['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'],
-  '경기도': ['수원시','성남시','의정부시','안양시','부천시','광명시','평택시','동두천시','안산시','고양시','과천시','구리시','남양주시','오산시','시흥시','군포시','의왕시','하남시','용인시','파주시','이천시','안성시','김포시','화성시','광주시','양주시','포천시','여주시'],
-  '인천광역시': ['중구','동구','미추홀구','연수구','남동구','부평구','계양구','서구','강화군','옹진군'],
-  '강원도': ['춘천시','원주시','강릉시','동해시','태백시','속초시','삼척시','홍천군','횡성군','영월군','평창군','정선군','철원군','화천군','양구군','인제군','고성군','양양군'],
-  '충청북도': ['청주시','충주시','제천시','보은군','옥천군','영동군','증평군','진천군','괴산군','음성군','단양군'],
-  '충청남도': ['천안시','공주시','보령시','아산시','서산시','논산시','계룡시','당진시','금산군','부여군','서천군','청양군','홍성군','예산군','태안군'],
-  '세종특별자치시': ['세종시'],
-  '대전광역시': ['동구','중구','서구','유성구','대덕구'],
-  '경상북도': ['포항시','경주시','김천시','안동시','구미시','영주시','영천시','상주시','문경시','경산시','군위군','의성군','청송군','영양군','영덕군','청도군','고령군','성주군','칠곡군','예천군','봉화군','울진군','울릉군'],
-  '경상남도': ['창원시','진주시','통영시','사천시','김해시','밀양시','거제시','양산시','의령군','함안군','창녕군','고성군','남해군','하동군','산청군','함양군','거창군','합천군'],
-  '대구광역시': ['중구','동구','서구','남구','북구','수성구','달서구','달성군'],
-  '부산광역시': ['중구','서구','동구','영도구','부산진구','동래구','남구','북구','해운대구','사하구','금정구','강서구','연제구','수영구','사상구','기장군'],
-  '울산광역시': ['중구','남구','동구','북구','울주군'],
-  '전라북도': ['전주시','군산시','익산시','정읍시','남원시','김제시','완주군','진안군','무주군','장수군','임실군','순창군','고창군','부안군'],
-  '전라남도': ['목포시','여수시','순천시','나주시','광양시','담양군','곡성군','구례군','고흥군','보성군','화순군','장흥군','강진군','해남군','영암군','무안군','함평군','영광군','장성군','완도군','진도군','신안군'],
-  '광주광역시': ['동구','서구','남구','북구','광산구'],
-  '제주특별자치도': ['제주시','서귀포시'],
-};
-
-/* ══════════════════════════════════════
-   17개 시/도별 시/군/구 SVG 지도 데이터
-   각 시/군/구의 대략적 위치를 path로 표현
-══════════════════════════════════════ */
-function getDistrictSVG(provName) {
-  const maps = {
-'서울특별시': `<svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="도봉구" d="M140,10 L165,8 L175,20 L170,35 L150,38 L138,28 Z"/>
-  <text class="dist-label" x="155" y="25" text-anchor="middle">도봉구</text>
-  <path class="dist-path" data-name="노원구" d="M175,20 L200,15 L210,30 L205,48 L185,50 L170,35 Z"/>
-  <text class="dist-label" x="190" y="36" text-anchor="middle">노원구</text>
-  <path class="dist-path" data-name="강북구" d="M120,28 L140,10 L150,38 L145,52 L125,50 L115,40 Z"/>
-  <text class="dist-label" x="133" y="38" text-anchor="middle">강북구</text>
-  <path class="dist-path" data-name="은평구" d="M65,35 L90,25 L115,40 L110,58 L90,62 L68,55 Z"/>
-  <text class="dist-label" x="90" y="48" text-anchor="middle">은평구</text>
-  <path class="dist-path" data-name="성북구" d="M125,50 L145,52 L170,35 L185,50 L178,65 L155,68 L130,65 Z"/>
-  <text class="dist-label" x="155" y="58" text-anchor="middle">성북구</text>
-  <path class="dist-path" data-name="중랑구" d="M185,50 L205,48 L215,62 L210,80 L195,82 L178,68 Z"/>
-  <text class="dist-label" x="198" y="68" text-anchor="middle">중랑구</text>
-  <path class="dist-path" data-name="서대문구" d="M68,55 L90,62 L98,78 L88,92 L70,88 L58,72 Z"/>
-  <text class="dist-label" x="78" y="76" text-anchor="middle">서대문구</text>
-  <path class="dist-path" data-name="종로구" d="M90,62 L110,58 L130,65 L135,78 L115,85 L98,78 Z"/>
-  <text class="dist-label" x="112" y="74" text-anchor="middle">종로구</text>
-  <path class="dist-path" data-name="동대문구" d="M155,68 L178,65 L195,82 L188,98 L168,95 L152,85 Z"/>
-  <text class="dist-label" x="173" y="84" text-anchor="middle">동대문구</text>
-  <path class="dist-path" data-name="중구" d="M115,85 L135,78 L152,85 L150,100 L130,105 L112,98 Z"/>
-  <text class="dist-label" x="132" y="94" text-anchor="middle">중구</text>
-  <path class="dist-path" data-name="광진구" d="M188,98 L210,80 L225,90 L222,108 L205,112 L190,108 Z"/>
-  <text class="dist-label" x="208" y="100" text-anchor="middle">광진구</text>
-  <path class="dist-path" data-name="성동구" d="M152,85 L168,95 L188,98 L190,108 L175,115 L155,112 L150,100 Z"/>
-  <text class="dist-label" x="170" y="102" text-anchor="middle">성동구</text>
-  <path class="dist-path" data-name="마포구" d="M40,88 L58,72 L70,88 L75,105 L60,115 L38,108 Z"/>
-  <text class="dist-label" x="56" y="98" text-anchor="middle">마포구</text>
-  <path class="dist-path" data-name="용산구" d="M70,88 L88,92 L112,98 L108,115 L85,118 L75,105 Z"/>
-  <text class="dist-label" x="92" y="106" text-anchor="middle">용산구</text>
-  <path class="dist-path" data-name="양천구" d="M20,115 L38,108 L50,120 L48,140 L32,142 L18,130 Z"/>
-  <text class="dist-label" x="34" y="128" text-anchor="middle">양천구</text>
-  <path class="dist-path" data-name="강서구" d="M5,90 L25,82 L40,88 L38,108 L20,115 L5,105 Z"/>
-  <text class="dist-label" x="22" y="100" text-anchor="middle">강서구</text>
-  <path class="dist-path" data-name="영등포구" d="M38,108 L60,115 L68,130 L60,145 L42,142 L32,130 Z"/>
-  <text class="dist-label" x="50" y="130" text-anchor="middle">영등포구</text>
-  <path class="dist-path" data-name="동작구" d="M68,130 L85,118 L108,115 L110,132 L95,145 L72,142 Z"/>
-  <text class="dist-label" x="92" y="134" text-anchor="middle">동작구</text>
-  <path class="dist-path" data-name="구로구" d="M18,130 L32,142 L42,158 L30,170 L12,165 L5,148 Z"/>
-  <text class="dist-label" x="24" y="154" text-anchor="middle">구로구</text>
-  <path class="dist-path" data-name="금천구" d="M30,170 L42,158 L58,165 L55,182 L40,185 L28,180 Z"/>
-  <text class="dist-label" x="42" y="175" text-anchor="middle">금천구</text>
-  <path class="dist-path" data-name="관악구" d="M58,165 L72,142 L95,145 L100,162 L88,178 L62,180 Z"/>
-  <text class="dist-label" x="78" y="165" text-anchor="middle">관악구</text>
-  <path class="dist-path" data-name="서초구" d="M95,145 L110,132 L135,130 L155,135 L158,160 L140,175 L115,178 L100,165 Z"/>
-  <text class="dist-label" x="128" y="158" text-anchor="middle">서초구</text>
-  <path class="dist-path" data-name="강남구" d="M155,135 L175,115 L205,112 L218,125 L215,155 L195,168 L170,172 L158,160 Z"/>
-  <text class="dist-label" x="188" y="148" text-anchor="middle">강남구</text>
-  <path class="dist-path" data-name="송파구" d="M218,125 L240,115 L258,128 L255,155 L238,165 L220,160 L215,145 Z"/>
-  <text class="dist-label" x="238" y="142" text-anchor="middle">송파구</text>
-  <path class="dist-path" data-name="강동구" d="M222,108 L248,100 L265,112 L258,128 L240,115 L225,112 Z"/>
-  <text class="dist-label" x="248" y="115" text-anchor="middle">강동구</text>
-</svg>`,
-
-'경기도': `<svg viewBox="0 0 340 380" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="파주시" d="M40,20 L80,10 L100,30 L95,60 L70,65 L40,50 Z"/>
-  <text class="dist-label" x="68" y="40" text-anchor="middle">파주시</text>
-  <path class="dist-path" data-name="김포시" d="M10,55 L40,50 L55,70 L45,90 L20,88 L8,72 Z"/>
-  <text class="dist-label" x="30" y="72" text-anchor="middle">김포시</text>
-  <path class="dist-path" data-name="고양시" d="M70,65 L100,55 L120,70 L115,95 L88,98 L68,85 Z"/>
-  <text class="dist-label" x="95" y="82" text-anchor="middle">고양시</text>
-  <path class="dist-path" data-name="양주시" d="M120,30 L155,20 L170,40 L165,65 L140,68 L120,55 Z"/>
-  <text class="dist-label" x="145" y="48" text-anchor="middle">양주시</text>
-  <path class="dist-path" data-name="의정부시" d="M140,68 L165,65 L175,82 L168,100 L148,102 L135,90 Z"/>
-  <text class="dist-label" x="155" y="86" text-anchor="middle">의정부시</text>
-  <path class="dist-path" data-name="동두천시" d="M155,20 L180,12 L195,28 L188,48 L170,45 L158,35 Z"/>
-  <text class="dist-label" x="175" y="34" text-anchor="middle">동두천시</text>
-  <path class="dist-path" data-name="포천시" d="M195,28 L230,15 L255,35 L248,65 L225,70 L200,58 L190,42 Z"/>
-  <text class="dist-label" x="225" y="48" text-anchor="middle">포천시</text>
-  <path class="dist-path" data-name="남양주시" d="M175,82 L200,75 L228,85 L235,110 L215,120 L195,115 L178,100 Z"/>
-  <text class="dist-label" x="205" y="100" text-anchor="middle">남양주시</text>
-  <path class="dist-path" data-name="구리시" d="M168,100 L185,98 L195,112 L188,125 L172,122 L165,110 Z"/>
-  <text class="dist-label" x="180" y="114" text-anchor="middle">구리시</text>
-  <path class="dist-path" data-name="하남시" d="M188,125 L208,120 L220,135 L215,150 L198,148 L185,138 Z"/>
-  <text class="dist-label" x="202" y="138" text-anchor="middle">하남시</text>
-  <path class="dist-path" data-name="부천시" d="M40,105 L60,100 L72,115 L65,132 L45,130 L35,118 Z"/>
-  <text class="dist-label" x="52" y="118" text-anchor="middle">부천시</text>
-  <path class="dist-path" data-name="광명시" d="M55,132 L72,128 L82,142 L75,155 L58,152 L50,142 Z"/>
-  <text class="dist-label" x="65" y="144" text-anchor="middle">광명시</text>
-  <path class="dist-path" data-name="안양시" d="M72,148 L92,142 L105,155 L100,170 L82,168 L70,160 Z"/>
-  <text class="dist-label" x="88" y="160" text-anchor="middle">안양시</text>
-  <path class="dist-path" data-name="과천시" d="M100,148 L118,142 L128,155 L122,168 L105,165 L98,158 Z"/>
-  <text class="dist-label" x="112" y="158" text-anchor="middle">과천시</text>
-  <path class="dist-path" data-name="군포시" d="M78,170 L95,165 L105,178 L98,192 L82,188 L75,180 Z"/>
-  <text class="dist-label" x="90" y="182" text-anchor="middle">군포시</text>
-  <path class="dist-path" data-name="의왕시" d="M98,178 L115,172 L125,185 L120,198 L105,195 L95,188 Z"/>
-  <text class="dist-label" x="110" y="188" text-anchor="middle">의왕시</text>
-  <path class="dist-path" data-name="안산시" d="M30,155 L55,148 L68,165 L62,188 L38,192 L22,178 Z"/>
-  <text class="dist-label" x="45" y="174" text-anchor="middle">안산시</text>
-  <path class="dist-path" data-name="시흥시" d="M15,128 L40,118 L55,135 L50,155 L30,158 L10,145 Z"/>
-  <text class="dist-label" x="32" y="142" text-anchor="middle">시흥시</text>
-  <path class="dist-path" data-name="성남시" d="M135,145 L158,138 L175,150 L172,172 L152,178 L132,168 Z"/>
-  <text class="dist-label" x="153" y="162" text-anchor="middle">성남시</text>
-  <path class="dist-path" data-name="수원시" d="M82,200 L108,192 L125,205 L120,228 L98,232 L78,218 Z"/>
-  <text class="dist-label" x="102" y="215" text-anchor="middle">수원시</text>
-  <path class="dist-path" data-name="용인시" d="M130,190 L160,180 L185,195 L180,225 L155,232 L128,218 Z"/>
-  <text class="dist-label" x="155" y="210" text-anchor="middle">용인시</text>
-  <path class="dist-path" data-name="화성시" d="M25,200 L55,192 L78,210 L72,242 L45,252 L18,235 Z"/>
-  <text class="dist-label" x="48" y="225" text-anchor="middle">화성시</text>
-  <path class="dist-path" data-name="오산시" d="M95,238 L115,232 L125,245 L118,258 L100,255 L92,248 Z"/>
-  <text class="dist-label" x="108" y="248" text-anchor="middle">오산시</text>
-  <path class="dist-path" data-name="평택시" d="M35,260 L65,250 L90,265 L85,295 L58,302 L30,288 Z"/>
-  <text class="dist-label" x="60" y="280" text-anchor="middle">평택시</text>
-  <path class="dist-path" data-name="안성시" d="M105,268 L135,258 L158,272 L152,298 L128,305 L100,292 Z"/>
-  <text class="dist-label" x="130" y="285" text-anchor="middle">안성시</text>
-  <path class="dist-path" data-name="이천시" d="M170,242 L200,232 L222,248 L218,275 L195,282 L168,268 Z"/>
-  <text class="dist-label" x="195" y="260" text-anchor="middle">이천시</text>
-  <path class="dist-path" data-name="광주시" d="M185,195 L215,188 L235,205 L228,228 L205,232 L182,218 Z"/>
-  <text class="dist-label" x="210" y="214" text-anchor="middle">광주시</text>
-  <path class="dist-path" data-name="여주시" d="M228,228 L258,218 L278,238 L272,265 L248,272 L225,255 Z"/>
-  <text class="dist-label" x="252" y="248" text-anchor="middle">여주시</text>
-</svg>`,
-
-'인천광역시': `<svg viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="강화군" d="M20,15 L70,10 L85,35 L80,65 L50,72 L15,55 Z"/>
-  <text class="dist-label" x="50" y="42" text-anchor="middle">강화군</text>
-  <path class="dist-path" data-name="계양구" d="M130,55 L160,48 L172,65 L168,85 L148,88 L128,78 Z"/>
-  <text class="dist-label" x="150" y="72" text-anchor="middle">계양구</text>
-  <path class="dist-path" data-name="부평구" d="M128,88 L155,82 L168,98 L162,118 L142,120 L125,108 Z"/>
-  <text class="dist-label" x="146" y="105" text-anchor="middle">부평구</text>
-  <path class="dist-path" data-name="서구" d="M85,65 L115,58 L130,78 L125,105 L100,112 L80,98 Z"/>
-  <text class="dist-label" x="105" y="88" text-anchor="middle">서구</text>
-  <path class="dist-path" data-name="중구" d="M40,85 L68,78 L80,98 L75,120 L52,125 L35,108 Z"/>
-  <text class="dist-label" x="58" y="105" text-anchor="middle">중구</text>
-  <path class="dist-path" data-name="동구" d="M100,112 L122,108 L132,125 L125,142 L108,138 L95,128 Z"/>
-  <text class="dist-label" x="114" y="128" text-anchor="middle">동구</text>
-  <path class="dist-path" data-name="미추홀구" d="M108,142 L130,135 L142,152 L135,170 L115,168 L105,158 Z"/>
-  <text class="dist-label" x="124" y="155" text-anchor="middle">미추홀구</text>
-  <path class="dist-path" data-name="남동구" d="M142,148 L170,140 L185,158 L178,180 L155,182 L138,170 Z"/>
-  <text class="dist-label" x="162" y="165" text-anchor="middle">남동구</text>
-  <path class="dist-path" data-name="연수구" d="M125,178 L152,172 L162,190 L155,210 L132,212 L120,198 Z"/>
-  <text class="dist-label" x="140" y="195" text-anchor="middle">연수구</text>
-  <path class="dist-path" data-name="옹진군" d="M10,160 L40,148 L55,170 L48,200 L25,205 L5,188 Z"/>
-  <text class="dist-label" x="30" y="180" text-anchor="middle">옹진군</text>
-</svg>`,
-
-'강원도': `<svg viewBox="0 0 350 340" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="철원군" d="M30,20 L70,12 L88,32 L82,58 L55,62 L28,48 Z"/>
-  <text class="dist-label" x="58" y="40" text-anchor="middle">철원군</text>
-  <path class="dist-path" data-name="화천군" d="M88,32 L125,22 L142,45 L135,72 L108,75 L85,58 Z"/>
-  <text class="dist-label" x="115" y="52" text-anchor="middle">화천군</text>
-  <path class="dist-path" data-name="양구군" d="M142,45 L178,35 L195,55 L188,78 L162,82 L138,68 Z"/>
-  <text class="dist-label" x="168" y="62" text-anchor="middle">양구군</text>
-  <path class="dist-path" data-name="인제군" d="M178,35 L220,25 L245,48 L238,85 L210,92 L188,78 Z"/>
-  <text class="dist-label" x="215" y="62" text-anchor="middle">인제군</text>
-  <path class="dist-path" data-name="고성군" d="M245,15 L280,8 L295,30 L288,55 L262,58 L245,42 Z"/>
-  <text class="dist-label" x="270" y="38" text-anchor="middle">고성군</text>
-  <path class="dist-path" data-name="속초시" d="M278,55 L305,48 L315,68 L308,85 L288,82 L275,72 Z"/>
-  <text class="dist-label" x="295" y="70" text-anchor="middle">속초시</text>
-  <path class="dist-path" data-name="양양군" d="M288,82 L315,78 L322,102 L315,125 L295,128 L282,112 L278,95 Z"/>
-  <text class="dist-label" x="302" y="105" text-anchor="middle">양양군</text>
-  <path class="dist-path" data-name="춘천시" d="M82,72 L118,65 L140,82 L135,112 L108,118 L78,105 Z"/>
-  <text class="dist-label" x="110" y="95" text-anchor="middle">춘천시</text>
-  <path class="dist-path" data-name="홍천군" d="M135,82 L175,72 L210,88 L205,125 L172,132 L132,118 Z"/>
-  <text class="dist-label" x="170" y="108" text-anchor="middle">홍천군</text>
-  <path class="dist-path" data-name="횡성군" d="M128,125 L165,118 L182,138 L175,165 L148,170 L125,155 Z"/>
-  <text class="dist-label" x="155" y="148" text-anchor="middle">횡성군</text>
-  <path class="dist-path" data-name="원주시" d="M95,145 L128,135 L148,155 L142,185 L115,192 L88,175 Z"/>
-  <text class="dist-label" x="120" y="168" text-anchor="middle">원주시</text>
-  <path class="dist-path" data-name="강릉시" d="M230,85 L275,78 L298,100 L295,140 L268,148 L238,135 L225,112 Z"/>
-  <text class="dist-label" x="262" y="118" text-anchor="middle">강릉시</text>
-  <path class="dist-path" data-name="평창군" d="M182,125 L218,115 L240,135 L235,168 L208,175 L185,158 Z"/>
-  <text class="dist-label" x="212" y="148" text-anchor="middle">평창군</text>
-  <path class="dist-path" data-name="정선군" d="M175,168 L210,158 L235,175 L228,208 L200,215 L172,198 Z"/>
-  <text class="dist-label" x="205" y="192" text-anchor="middle">정선군</text>
-  <path class="dist-path" data-name="영월군" d="M128,192 L162,182 L180,200 L175,230 L148,238 L122,222 Z"/>
-  <text class="dist-label" x="152" y="212" text-anchor="middle">영월군</text>
-  <path class="dist-path" data-name="동해시" d="M268,148 L298,142 L310,162 L305,185 L282,188 L265,175 Z"/>
-  <text class="dist-label" x="288" y="168" text-anchor="middle">동해시</text>
-  <path class="dist-path" data-name="삼척시" d="M248,195 L280,185 L305,205 L298,245 L270,255 L242,238 Z"/>
-  <text class="dist-label" x="275" y="222" text-anchor="middle">삼척시</text>
-  <path class="dist-path" data-name="태백시" d="M210,218 L242,208 L258,228 L252,255 L228,260 L205,245 Z"/>
-  <text class="dist-label" x="232" y="238" text-anchor="middle">태백시</text>
-</svg>`,
-
-'충청북도': `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="충주시" d="M80,15 L130,10 L152,35 L145,68 L115,75 L78,58 Z"/>
-  <text class="dist-label" x="115" y="45" text-anchor="middle">충주시</text>
-  <path class="dist-path" data-name="제천시" d="M160,12 L210,8 L232,35 L225,68 L195,75 L162,58 L155,38 Z"/>
-  <text class="dist-label" x="195" y="45" text-anchor="middle">제천시</text>
-  <path class="dist-path" data-name="단양군" d="M225,25 L268,18 L285,42 L278,72 L252,78 L228,62 Z"/>
-  <text class="dist-label" x="255" y="52" text-anchor="middle">단양군</text>
-  <path class="dist-path" data-name="음성군" d="M38,65 L75,58 L92,78 L85,108 L58,115 L32,98 Z"/>
-  <text class="dist-label" x="62" y="90" text-anchor="middle">음성군</text>
-  <path class="dist-path" data-name="진천군" d="M15,100 L48,92 L62,112 L55,138 L30,142 L10,128 Z"/>
-  <text class="dist-label" x="38" y="120" text-anchor="middle">진천군</text>
-  <path class="dist-path" data-name="증평군" d="M55,125 L82,118 L92,138 L85,155 L62,158 L50,142 Z"/>
-  <text class="dist-label" x="72" y="142" text-anchor="middle">증평군</text>
-  <path class="dist-path" data-name="괴산군" d="M95,78 L138,68 L158,92 L152,128 L122,135 L88,118 Z"/>
-  <text class="dist-label" x="125" y="105" text-anchor="middle">괴산군</text>
-  <path class="dist-path" data-name="청주시" d="M42,145 L82,135 L108,155 L102,192 L70,200 L35,182 Z"/>
-  <text class="dist-label" x="72" y="172" text-anchor="middle">청주시</text>
-  <path class="dist-path" data-name="보은군" d="M108,145 L148,135 L168,158 L162,192 L132,200 L105,182 Z"/>
-  <text class="dist-label" x="138" y="172" text-anchor="middle">보은군</text>
-  <path class="dist-path" data-name="옥천군" d="M88,205 L125,195 L145,218 L138,248 L108,255 L82,238 Z"/>
-  <text class="dist-label" x="115" y="228" text-anchor="middle">옥천군</text>
-  <path class="dist-path" data-name="영동군" d="M148,218 L188,208 L210,232 L202,265 L172,272 L142,255 Z"/>
-  <text class="dist-label" x="178" y="242" text-anchor="middle">영동군</text>
-</svg>`,
-
-'충청남도': `<svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="태안군" d="M5,20 L42,12 L55,38 L48,68 L22,72 L2,52 Z"/>
-  <text class="dist-label" x="28" y="45" text-anchor="middle">태안군</text>
-  <path class="dist-path" data-name="서산시" d="M48,45 L88,35 L105,58 L98,92 L68,98 L45,82 Z"/>
-  <text class="dist-label" x="75" y="70" text-anchor="middle">서산시</text>
-  <path class="dist-path" data-name="당진시" d="M100,25 L148,15 L165,42 L158,72 L128,78 L98,62 Z"/>
-  <text class="dist-label" x="132" y="52" text-anchor="middle">당진시</text>
-  <path class="dist-path" data-name="홍성군" d="M62,98 L102,88 L118,110 L112,140 L82,148 L58,130 Z"/>
-  <text class="dist-label" x="88" y="122" text-anchor="middle">홍성군</text>
-  <path class="dist-path" data-name="예산군" d="M118,82 L158,72 L175,95 L168,128 L138,135 L115,118 Z"/>
-  <text class="dist-label" x="145" y="108" text-anchor="middle">예산군</text>
-  <path class="dist-path" data-name="아산시" d="M168,58 L212,48 L232,72 L225,105 L195,112 L165,95 Z"/>
-  <text class="dist-label" x="198" y="82" text-anchor="middle">아산시</text>
-  <path class="dist-path" data-name="천안시" d="M210,82 L258,72 L278,98 L272,135 L240,142 L208,125 Z"/>
-  <text class="dist-label" x="242" y="110" text-anchor="middle">천안시</text>
-  <path class="dist-path" data-name="보령시" d="M20,135 L58,125 L72,148 L65,182 L38,188 L15,168 Z"/>
-  <text class="dist-label" x="42" y="160" text-anchor="middle">보령시</text>
-  <path class="dist-path" data-name="청양군" d="M82,142 L118,132 L135,155 L128,185 L100,192 L78,172 Z"/>
-  <text class="dist-label" x="108" y="165" text-anchor="middle">청양군</text>
-  <path class="dist-path" data-name="공주시" d="M138,128 L182,118 L205,142 L198,178 L165,185 L132,168 Z"/>
-  <text class="dist-label" x="168" y="158" text-anchor="middle">공주시</text>
-  <path class="dist-path" data-name="서천군" d="M15,192 L48,182 L62,205 L55,235 L28,242 L8,222 Z"/>
-  <text class="dist-label" x="35" y="215" text-anchor="middle">서천군</text>
-  <path class="dist-path" data-name="부여군" d="M62,188 L102,178 L118,202 L112,235 L82,242 L58,222 Z"/>
-  <text class="dist-label" x="88" y="215" text-anchor="middle">부여군</text>
-  <path class="dist-path" data-name="논산시" d="M118,195 L158,185 L178,208 L172,242 L142,248 L115,232 Z"/>
-  <text class="dist-label" x="148" y="220" text-anchor="middle">논산시</text>
-  <path class="dist-path" data-name="계룡시" d="M185,185 L210,178 L220,198 L215,218 L195,220 L182,205 Z"/>
-  <text class="dist-label" x="200" y="202" text-anchor="middle">계룡시</text>
-  <path class="dist-path" data-name="금산군" d="M198,222 L238,212 L258,238 L252,272 L222,278 L195,258 Z"/>
-  <text class="dist-label" x="228" y="248" text-anchor="middle">금산군</text>
-</svg>`,
-
-'세종특별자치시': `<svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="세종시" d="M30,20 L100,10 L150,30 L170,70 L160,120 L130,150 L80,160 L30,140 L10,100 L15,55 Z"/>
-  <text class="dist-label" x="95" y="90" text-anchor="middle" style="font-size:8px">세종시</text>
-</svg>`,
-
-'대전광역시': `<svg viewBox="0 0 260 240" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="유성구" d="M15,40 L65,25 L90,55 L85,100 L52,110 L15,90 Z"/>
-  <text class="dist-label" x="52" y="72" text-anchor="middle">유성구</text>
-  <path class="dist-path" data-name="서구" d="M55,110 L92,98 L108,125 L100,160 L68,168 L45,148 Z"/>
-  <text class="dist-label" x="78" y="138" text-anchor="middle">서구</text>
-  <path class="dist-path" data-name="중구" d="M100,88 L140,78 L158,105 L150,140 L118,148 L98,128 Z"/>
-  <text class="dist-label" x="128" y="118" text-anchor="middle">중구</text>
-  <path class="dist-path" data-name="대덕구" d="M148,42 L200,28 L225,58 L218,100 L182,110 L148,92 Z"/>
-  <text class="dist-label" x="185" y="72" text-anchor="middle">대덕구</text>
-  <path class="dist-path" data-name="동구" d="M155,108 L198,98 L220,125 L212,165 L178,175 L150,155 Z"/>
-  <text class="dist-label" x="185" y="140" text-anchor="middle">동구</text>
-</svg>`,
-
-'경상북도': `<svg viewBox="0 0 360 380" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="울진군" d="M280,10 L320,5 L338,30 L332,65 L308,72 L278,55 Z"/>
-  <text class="dist-label" x="308" y="42" text-anchor="middle">울진군</text>
-  <path class="dist-path" data-name="봉화군" d="M215,18 L258,10 L278,35 L272,68 L245,75 L215,58 Z"/>
-  <text class="dist-label" x="248" y="48" text-anchor="middle">봉화군</text>
-  <path class="dist-path" data-name="영주시" d="M155,28 L198,18 L218,45 L212,78 L182,85 L152,68 Z"/>
-  <text class="dist-label" x="185" y="55" text-anchor="middle">영주시</text>
-  <path class="dist-path" data-name="예천군" d="M108,55 L148,45 L165,68 L158,98 L128,105 L105,88 Z"/>
-  <text class="dist-label" x="135" y="78" text-anchor="middle">예천군</text>
-  <path class="dist-path" data-name="영양군" d="M245,68 L282,58 L298,82 L292,112 L265,118 L240,102 Z"/>
-  <text class="dist-label" x="268" y="92" text-anchor="middle">영양군</text>
-  <path class="dist-path" data-name="안동시" d="M148,72 L195,62 L220,88 L215,125 L180,135 L142,118 Z"/>
-  <text class="dist-label" x="180" y="102" text-anchor="middle">안동시</text>
-  <path class="dist-path" data-name="영덕군" d="M285,98 L322,88 L338,115 L332,148 L305,155 L280,138 Z"/>
-  <text class="dist-label" x="310" y="125" text-anchor="middle">영덕군</text>
-  <path class="dist-path" data-name="청송군" d="M218,108 L258,98 L278,122 L272,158 L242,165 L215,148 Z"/>
-  <text class="dist-label" x="248" y="135" text-anchor="middle">청송군</text>
-  <path class="dist-path" data-name="문경시" d="M58,72 L98,62 L118,88 L112,122 L82,128 L55,112 Z"/>
-  <text class="dist-label" x="85" y="98" text-anchor="middle">문경시</text>
-  <path class="dist-path" data-name="상주시" d="M42,118 L82,108 L105,132 L98,168 L65,175 L38,155 Z"/>
-  <text class="dist-label" x="72" y="145" text-anchor="middle">상주시</text>
-  <path class="dist-path" data-name="의성군" d="M128,118 L172,108 L195,135 L188,172 L155,178 L125,158 Z"/>
-  <text class="dist-label" x="160" y="148" text-anchor="middle">의성군</text>
-  <path class="dist-path" data-name="구미시" d="M55,172 L95,162 L115,185 L108,218 L78,225 L50,208 Z"/>
-  <text class="dist-label" x="82" y="198" text-anchor="middle">구미시</text>
-  <path class="dist-path" data-name="김천시" d="M18,162 L55,152 L72,178 L65,212 L35,218 L12,200 Z"/>
-  <text class="dist-label" x="42" y="188" text-anchor="middle">김천시</text>
-  <path class="dist-path" data-name="군위군" d="M155,168 L195,158 L215,182 L208,215 L178,222 L150,205 Z"/>
-  <text class="dist-label" x="182" y="195" text-anchor="middle">군위군</text>
-  <path class="dist-path" data-name="성주군" d="M72,225 L108,215 L128,238 L122,268 L92,275 L68,258 Z"/>
-  <text class="dist-label" x="98" y="248" text-anchor="middle">성주군</text>
-  <path class="dist-path" data-name="칠곡군" d="M108,218 L142,208 L158,232 L152,260 L125,265 L105,248 Z"/>
-  <text class="dist-label" x="132" y="242" text-anchor="middle">칠곡군</text>
-  <path class="dist-path" data-name="고령군" d="M65,268 L98,258 L115,282 L108,310 L78,318 L60,298 Z"/>
-  <text class="dist-label" x="88" y="292" text-anchor="middle">고령군</text>
-  <path class="dist-path" data-name="영천시" d="M218,205 L258,195 L280,218 L275,252 L245,258 L215,242 Z"/>
-  <text class="dist-label" x="248" y="228" text-anchor="middle">영천시</text>
-  <path class="dist-path" data-name="경주시" d="M258,188 L302,178 L325,205 L318,248 L288,258 L255,240 Z"/>
-  <text class="dist-label" x="290" y="222" text-anchor="middle">경주시</text>
-  <path class="dist-path" data-name="경산시" d="M178,240 L218,230 L238,255 L232,285 L202,292 L175,275 Z"/>
-  <text class="dist-label" x="208" y="265" text-anchor="middle">경산시</text>
-  <path class="dist-path" data-name="청도군" d="M202,285 L238,275 L258,300 L252,332 L222,338 L198,318 Z"/>
-  <text class="dist-label" x="228" y="312" text-anchor="middle">청도군</text>
-  <path class="dist-path" data-name="포항시" d="M290,145 L330,135 L350,162 L345,205 L315,215 L285,198 Z"/>
-  <text class="dist-label" x="318" y="178" text-anchor="middle">포항시</text>
-  <path class="dist-path" data-name="울릉군" d="M320,8 L342,5 L350,18 L345,35 L328,38 L318,25 Z"/>
-  <text class="dist-label" x="335" y="22" text-anchor="middle">울릉군</text>
-</svg>`,
-
-'경상남도': `<svg viewBox="0 0 340 300" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="거창군" d="M20,15 L65,8 L82,32 L75,62 L48,68 L18,52 Z"/>
-  <text class="dist-label" x="48" y="42" text-anchor="middle">거창군</text>
-  <path class="dist-path" data-name="함양군" d="M15,65 L50,55 L68,78 L62,110 L35,118 L10,100 Z"/>
-  <text class="dist-label" x="38" y="90" text-anchor="middle">함양군</text>
-  <path class="dist-path" data-name="합천군" d="M72,42 L118,32 L138,58 L132,95 L100,102 L68,85 Z"/>
-  <text class="dist-label" x="102" y="72" text-anchor="middle">합천군</text>
-  <path class="dist-path" data-name="산청군" d="M48,112 L85,102 L102,128 L95,162 L65,168 L42,148 Z"/>
-  <text class="dist-label" x="72" y="138" text-anchor="middle">산청군</text>
-  <path class="dist-path" data-name="의령군" d="M118,85 L158,75 L175,100 L168,132 L138,138 L115,120 Z"/>
-  <text class="dist-label" x="145" y="110" text-anchor="middle">의령군</text>
-  <path class="dist-path" data-name="창녕군" d="M168,62 L210,52 L230,78 L222,112 L192,118 L165,100 Z"/>
-  <text class="dist-label" x="198" y="88" text-anchor="middle">창녕군</text>
-  <path class="dist-path" data-name="밀양시" d="M222,52 L268,42 L288,68 L282,105 L252,112 L220,95 Z"/>
-  <text class="dist-label" x="255" y="80" text-anchor="middle">밀양시</text>
-  <path class="dist-path" data-name="양산시" d="M278,75 L318,65 L335,92 L328,128 L300,135 L275,118 Z"/>
-  <text class="dist-label" x="308" y="102" text-anchor="middle">양산시</text>
-  <path class="dist-path" data-name="함안군" d="M138,128 L175,118 L192,145 L185,175 L155,182 L132,162 Z"/>
-  <text class="dist-label" x="162" y="152" text-anchor="middle">함안군</text>
-  <path class="dist-path" data-name="창원시" d="M185,135 L228,125 L250,152 L245,192 L212,200 L182,178 Z"/>
-  <text class="dist-label" x="215" y="168" text-anchor="middle">창원시</text>
-  <path class="dist-path" data-name="김해시" d="M250,118 L295,108 L315,135 L308,170 L278,178 L248,158 Z"/>
-  <text class="dist-label" x="282" y="145" text-anchor="middle">김해시</text>
-  <path class="dist-path" data-name="하동군" d="M22,155 L58,145 L75,172 L68,208 L38,215 L15,195 Z"/>
-  <text class="dist-label" x="45" y="182" text-anchor="middle">하동군</text>
-  <path class="dist-path" data-name="진주시" d="M82,155 L125,145 L145,172 L138,210 L105,218 L75,198 Z"/>
-  <text class="dist-label" x="110" y="185" text-anchor="middle">진주시</text>
-  <path class="dist-path" data-name="사천시" d="M92,218 L128,208 L145,235 L138,262 L108,268 L85,250 Z"/>
-  <text class="dist-label" x="115" y="242" text-anchor="middle">사천시</text>
-  <path class="dist-path" data-name="남해군" d="M42,232 L78,222 L95,248 L88,278 L58,285 L35,265 Z"/>
-  <text class="dist-label" x="65" y="258" text-anchor="middle">남해군</text>
-  <path class="dist-path" data-name="고성군" d="M135,228 L170,218 L188,245 L182,275 L152,282 L128,262 Z"/>
-  <text class="dist-label" x="158" y="252" text-anchor="middle">고성군</text>
-  <path class="dist-path" data-name="통영시" d="M175,262 L210,252 L228,278 L222,302 L192,308 L170,292 Z"/>
-  <text class="dist-label" x="198" y="282" text-anchor="middle">통영시</text>
-  <path class="dist-path" data-name="거제시" d="M228,268 L265,258 L285,285 L278,312 L248,318 L225,300 Z"/>
-  <text class="dist-label" x="255" y="292" text-anchor="middle">거제시</text>
-</svg>`,
-
-'대구광역시': `<svg viewBox="0 0 260 240" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="북구" d="M85,15 L140,8 L162,35 L155,68 L120,75 L82,58 Z"/>
-  <text class="dist-label" x="122" y="45" text-anchor="middle">북구</text>
-  <path class="dist-path" data-name="서구" d="M30,68 L72,58 L88,82 L82,110 L52,118 L28,100 Z"/>
-  <text class="dist-label" x="58" y="92" text-anchor="middle">서구</text>
-  <path class="dist-path" data-name="중구" d="M88,72 L125,62 L142,88 L135,118 L105,125 L82,108 Z"/>
-  <text class="dist-label" x="112" y="98" text-anchor="middle">중구</text>
-  <path class="dist-path" data-name="동구" d="M142,55 L195,45 L218,72 L212,112 L178,120 L138,102 Z"/>
-  <text class="dist-label" x="178" y="85" text-anchor="middle">동구</text>
-  <path class="dist-path" data-name="남구" d="M88,118 L128,108 L145,132 L138,162 L108,168 L82,150 Z"/>
-  <text class="dist-label" x="112" y="142" text-anchor="middle">남구</text>
-  <path class="dist-path" data-name="수성구" d="M145,108 L192,98 L215,125 L208,162 L175,170 L142,152 Z"/>
-  <text class="dist-label" x="178" y="138" text-anchor="middle">수성구</text>
-  <path class="dist-path" data-name="달서구" d="M35,135 L75,125 L95,150 L88,185 L55,192 L28,172 Z"/>
-  <text class="dist-label" x="62" y="162" text-anchor="middle">달서구</text>
-  <path class="dist-path" data-name="달성군" d="M52,192 L102,180 L142,195 L165,225 L120,240 L60,235 L35,218 Z"/>
-  <text class="dist-label" x="102" y="215" text-anchor="middle">달성군</text>
-</svg>`,
-
-'부산광역시': `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="강서구" d="M10,40 L52,30 L68,55 L62,88 L32,95 L8,75 Z"/>
-  <text class="dist-label" x="38" y="65" text-anchor="middle">강서구</text>
-  <path class="dist-path" data-name="북구" d="M68,42 L108,32 L125,58 L118,88 L88,95 L65,78 Z"/>
-  <text class="dist-label" x="95" y="68" text-anchor="middle">북구</text>
-  <path class="dist-path" data-name="사상구" d="M62,98 L98,88 L115,112 L108,142 L78,148 L55,130 Z"/>
-  <text class="dist-label" x="85" y="122" text-anchor="middle">사상구</text>
-  <path class="dist-path" data-name="사하구" d="M18,118 L52,108 L68,135 L62,170 L32,178 L12,158 Z"/>
-  <text class="dist-label" x="42" y="145" text-anchor="middle">사하구</text>
-  <path class="dist-path" data-name="기장군" d="M195,15 L240,8 L262,35 L255,80 L225,88 L192,68 Z"/>
-  <text class="dist-label" x="228" y="52" text-anchor="middle">기장군</text>
-  <path class="dist-path" data-name="금정구" d="M148,48 L192,38 L210,65 L202,100 L172,108 L142,88 Z"/>
-  <text class="dist-label" x="175" y="78" text-anchor="middle">금정구</text>
-  <path class="dist-path" data-name="동래구" d="M142,100 L178,90 L195,115 L188,145 L158,152 L135,132 Z"/>
-  <text class="dist-label" x="165" y="125" text-anchor="middle">동래구</text>
-  <path class="dist-path" data-name="부산진구" d="M105,115 L142,105 L158,132 L152,162 L120,168 L98,148 Z"/>
-  <text class="dist-label" x="128" y="142" text-anchor="middle">부산진구</text>
-  <path class="dist-path" data-name="연제구" d="M158,140 L192,130 L205,155 L198,182 L170,188 L152,168 Z"/>
-  <text class="dist-label" x="178" y="162" text-anchor="middle">연제구</text>
-  <path class="dist-path" data-name="해운대구" d="M205,108 L245,98 L268,125 L262,168 L232,175 L198,158 Z"/>
-  <text class="dist-label" x="235" y="140" text-anchor="middle">해운대구</text>
-  <path class="dist-path" data-name="수영구" d="M198,178 L232,168 L248,192 L242,218 L215,225 L192,208 Z"/>
-  <text class="dist-label" x="222" y="198" text-anchor="middle">수영구</text>
-  <path class="dist-path" data-name="서구" d="M65,165 L98,155 L112,180 L105,212 L75,218 L58,198 Z"/>
-  <text class="dist-label" x="85" y="190" text-anchor="middle">서구</text>
-  <path class="dist-path" data-name="중구" d="M85,218 L115,208 L128,232 L122,258 L95,265 L78,248 Z"/>
-  <text class="dist-label" x="105" y="240" text-anchor="middle">중구</text>
-  <path class="dist-path" data-name="동구" d="M115,200 L148,190 L162,215 L155,245 L128,252 L110,232 Z"/>
-  <text class="dist-label" x="138" y="225" text-anchor="middle">동구</text>
-  <path class="dist-path" data-name="영도구" d="M118,258 L155,248 L172,272 L165,298 L135,305 L112,288 Z"/>
-  <text class="dist-label" x="142" y="280" text-anchor="middle">영도구</text>
-  <path class="dist-path" data-name="남구" d="M162,220 L198,210 L215,238 L208,268 L178,275 L155,255 Z"/>
-  <text class="dist-label" x="185" y="248" text-anchor="middle">남구</text>
-</svg>`,
-
-'울산광역시': `<svg viewBox="0 0 240 220" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="울주군" d="M15,20 L80,8 L140,25 L180,60 L195,110 L175,165 L130,190 L70,195 L25,170 L8,120 L5,65 Z"/>
-  <text class="dist-label" x="60" y="110" text-anchor="middle">울주군</text>
-  <path class="dist-path" data-name="북구" d="M110,45 L155,35 L175,58 L168,88 L140,95 L108,78 Z"/>
-  <text class="dist-label" x="142" y="68" text-anchor="middle">북구</text>
-  <path class="dist-path" data-name="중구" d="M108,88 L145,78 L162,102 L155,132 L125,138 L102,120 Z"/>
-  <text class="dist-label" x="132" y="112" text-anchor="middle">중구</text>
-  <path class="dist-path" data-name="동구" d="M162,78 L200,68 L220,95 L215,128 L185,135 L158,118 Z"/>
-  <text class="dist-label" x="190" y="105" text-anchor="middle">동구</text>
-  <path class="dist-path" data-name="남구" d="M125,132 L168,122 L188,148 L182,182 L148,190 L118,170 Z"/>
-  <text class="dist-label" x="155" y="158" text-anchor="middle">남구</text>
-</svg>`,
-
-'전라북도': `<svg viewBox="0 0 320 300" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="군산시" d="M5,20 L55,10 L72,35 L65,68 L35,75 L2,58 Z"/>
-  <text class="dist-label" x="38" y="45" text-anchor="middle">군산시</text>
-  <path class="dist-path" data-name="익산시" d="M72,28 L118,18 L138,45 L132,78 L102,85 L68,68 Z"/>
-  <text class="dist-label" x="102" y="55" text-anchor="middle">익산시</text>
-  <path class="dist-path" data-name="완주군" d="M138,35 L188,25 L210,55 L205,95 L172,105 L135,85 Z"/>
-  <text class="dist-label" x="172" y="68" text-anchor="middle">완주군</text>
-  <path class="dist-path" data-name="전주시" d="M100,82 L145,72 L165,98 L158,132 L125,140 L95,120 Z"/>
-  <text class="dist-label" x="130" y="110" text-anchor="middle">전주시</text>
-  <path class="dist-path" data-name="김제시" d="M38,82 L82,72 L100,98 L95,132 L62,140 L32,120 Z"/>
-  <text class="dist-label" x="65" y="110" text-anchor="middle">김제시</text>
-  <path class="dist-path" data-name="무주군" d="M218,45 L268,35 L290,62 L282,100 L252,108 L215,90 Z"/>
-  <text class="dist-label" x="252" y="75" text-anchor="middle">무주군</text>
-  <path class="dist-path" data-name="진안군" d="M195,92 L242,82 L262,110 L255,148 L222,155 L190,135 Z"/>
-  <text class="dist-label" x="225" y="122" text-anchor="middle">진안군</text>
-  <path class="dist-path" data-name="장수군" d="M225,152 L268,142 L288,168 L282,205 L252,212 L222,192 Z"/>
-  <text class="dist-label" x="255" y="180" text-anchor="middle">장수군</text>
-  <path class="dist-path" data-name="부안군" d="M5,92 L42,82 L58,108 L52,142 L22,148 L2,128 Z"/>
-  <text class="dist-label" x="28" y="118" text-anchor="middle">부안군</text>
-  <path class="dist-path" data-name="정읍시" d="M42,135 L85,125 L105,152 L98,192 L65,200 L35,178 Z"/>
-  <text class="dist-label" x="68" y="165" text-anchor="middle">정읍시</text>
-  <path class="dist-path" data-name="고창군" d="M8,162 L42,152 L58,178 L52,215 L22,222 L2,200 Z"/>
-  <text class="dist-label" x="28" y="192" text-anchor="middle">고창군</text>
-  <path class="dist-path" data-name="순창군" d="M118,155 L165,145 L185,172 L178,208 L145,215 L112,195 Z"/>
-  <text class="dist-label" x="148" y="182" text-anchor="middle">순창군</text>
-  <path class="dist-path" data-name="임실군" d="M155,135 L198,125 L220,152 L212,188 L180,195 L148,178 Z"/>
-  <text class="dist-label" x="185" y="165" text-anchor="middle">임실군</text>
-  <path class="dist-path" data-name="남원시" d="M168,205 L218,195 L242,225 L235,265 L202,272 L165,252 Z"/>
-  <text class="dist-label" x="205" y="238" text-anchor="middle">남원시</text>
-</svg>`,
-
-'전라남도': `<svg viewBox="0 0 360 380" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="영광군" d="M15,15 L58,8 L72,32 L65,62 L38,68 L12,52 Z"/>
-  <text class="dist-label" x="42" y="42" text-anchor="middle">영광군</text>
-  <path class="dist-path" data-name="장성군" d="M72,22 L118,12 L135,38 L128,68 L98,75 L68,58 Z"/>
-  <text class="dist-label" x="102" y="48" text-anchor="middle">장성군</text>
-  <path class="dist-path" data-name="담양군" d="M135,18 L182,8 L202,35 L195,68 L165,75 L132,58 Z"/>
-  <text class="dist-label" x="168" y="48" text-anchor="middle">담양군</text>
-  <path class="dist-path" data-name="곡성군" d="M205,25 L252,15 L272,42 L265,78 L235,85 L202,65 Z"/>
-  <text class="dist-label" x="238" y="52" text-anchor="middle">곡성군</text>
-  <path class="dist-path" data-name="구례군" d="M268,42 L312,32 L332,58 L325,92 L298,98 L265,82 Z"/>
-  <text class="dist-label" x="298" y="68" text-anchor="middle">구례군</text>
-  <path class="dist-path" data-name="함평군" d="M22,68 L62,58 L78,82 L72,112 L42,118 L18,102 Z"/>
-  <text class="dist-label" x="48" y="92" text-anchor="middle">함평군</text>
-  <path class="dist-path" data-name="나주시" d="M78,68 L125,58 L145,85 L138,122 L105,130 L72,112 Z"/>
-  <text class="dist-label" x="108" y="98" text-anchor="middle">나주시</text>
-  <path class="dist-path" data-name="화순군" d="M145,72 L195,62 L218,88 L212,128 L178,135 L140,118 Z"/>
-  <text class="dist-label" x="178" y="102" text-anchor="middle">화순군</text>
-  <path class="dist-path" data-name="순천시" d="M225,78 L275,68 L298,98 L292,140 L258,148 L222,128 Z"/>
-  <text class="dist-label" x="258" y="112" text-anchor="middle">순천시</text>
-  <path class="dist-path" data-name="광양시" d="M292,92 L332,82 L350,108 L345,148 L318,155 L288,138 Z"/>
-  <text class="dist-label" x="320" y="122" text-anchor="middle">광양시</text>
-  <path class="dist-path" data-name="무안군" d="M5,115 L38,108 L52,132 L45,162 L18,168 L2,148 Z"/>
-  <text class="dist-label" x="28" y="142" text-anchor="middle">무안군</text>
-  <path class="dist-path" data-name="영암군" d="M52,128 L92,118 L108,145 L102,178 L72,185 L48,165 Z"/>
-  <text class="dist-label" x="78" y="155" text-anchor="middle">영암군</text>
-  <path class="dist-path" data-name="보성군" d="M185,128 L228,118 L248,145 L242,182 L212,188 L182,168 Z"/>
-  <text class="dist-label" x="215" y="158" text-anchor="middle">보성군</text>
-  <path class="dist-path" data-name="장흥군" d="M118,148 L162,138 L180,165 L175,200 L145,208 L115,188 Z"/>
-  <text class="dist-label" x="148" y="178" text-anchor="middle">장흥군</text>
-  <path class="dist-path" data-name="고흥군" d="M198,178 L242,168 L262,198 L255,238 L225,245 L195,225 Z"/>
-  <text class="dist-label" x="228" y="210" text-anchor="middle">고흥군</text>
-  <path class="dist-path" data-name="강진군" d="M105,192 L142,182 L158,208 L152,242 L122,248 L98,228 Z"/>
-  <text class="dist-label" x="128" y="220" text-anchor="middle">강진군</text>
-  <path class="dist-path" data-name="해남군" d="M45,188 L85,178 L102,205 L95,248 L62,258 L38,238 Z"/>
-  <text class="dist-label" x="68" y="222" text-anchor="middle">해남군</text>
-  <path class="dist-path" data-name="목포시" d="M8,178 L38,168 L52,192 L45,222 L18,228 L2,208 Z"/>
-  <text class="dist-label" x="28" y="200" text-anchor="middle">목포시</text>
-  <path class="dist-path" data-name="여수시" d="M262,195 L308,185 L332,215 L325,258 L295,268 L258,248 Z"/>
-  <text class="dist-label" x="295" y="230" text-anchor="middle">여수시</text>
-  <path class="dist-path" data-name="완도군" d="M88,262 L132,252 L152,278 L145,312 L115,318 L82,300 Z"/>
-  <text class="dist-label" x="118" y="288" text-anchor="middle">완도군</text>
-  <path class="dist-path" data-name="진도군" d="M10,255 L48,245 L65,272 L58,305 L28,312 L5,292 Z"/>
-  <text class="dist-label" x="35" y="282" text-anchor="middle">진도군</text>
-  <path class="dist-path" data-name="신안군" d="M2,210 L25,200 L38,225 L32,258 L12,262 L0,242 Z"/>
-  <text class="dist-label" x="18" y="238" text-anchor="middle">신안군</text>
-</svg>`,
-
-'광주광역시': `<svg viewBox="0 0 240 220" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="북구" d="M55,15 L135,8 L168,42 L160,85 L118,95 L48,78 Z"/>
-  <text class="dist-label" x="110" y="55" text-anchor="middle">북구</text>
-  <path class="dist-path" data-name="광산구" d="M5,55 L48,42 L62,78 L55,120 L22,128 L2,105 Z"/>
-  <text class="dist-label" x="32" y="90" text-anchor="middle">광산구</text>
-  <path class="dist-path" data-name="서구" d="M35,128 L72,118 L90,145 L82,180 L50,188 L28,168 Z"/>
-  <text class="dist-label" x="58" y="158" text-anchor="middle">서구</text>
-  <path class="dist-path" data-name="동구" d="M118,88 L165,78 L188,105 L182,142 L148,150 L112,132 Z"/>
-  <text class="dist-label" x="150" y="118" text-anchor="middle">동구</text>
-  <path class="dist-path" data-name="남구" d="M82,142 L130,132 L152,162 L145,200 L108,210 L72,192 Z"/>
-  <text class="dist-label" x="112" y="175" text-anchor="middle">남구</text>
-</svg>`,
-
-'제주특별자치도': `<svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
-  <path class="dist-path" data-name="제주시" d="M20,20 L150,8 L280,20 L285,55 L260,68 L150,72 L40,68 L15,55 Z"/>
-  <text class="dist-label" x="150" y="42" text-anchor="middle" style="font-size:7px">제주시</text>
-  <path class="dist-path" data-name="서귀포시" d="M15,55 L40,68 L150,72 L260,68 L285,55 L290,82 L270,108 L220,128 L150,135 L80,128 L30,108 L10,82 Z"/>
-  <text class="dist-label" x="150" y="102" text-anchor="middle" style="font-size:7px">서귀포시</text>
-</svg>`
-  };
-
-  return maps[provName] || `<svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
-    <text x="100" y="90" text-anchor="middle" fill="#a1a1aa" font-size="12">지도 준비 중</text>
-  </svg>`;
-}
-
-/* ══════════════════════════════════════
-   상태
-══════════════════════════════════════ */
-let selectedDistricts = [];
-let currentProvince = '';
-let modalViewMode = 'map'; // 'map' | 'list'
-
-/* ══════════════════════════════════════
-   지역 선택 (폰 1)
-══════════════════════════════════════ */
-function selectProvince(name) {
-  currentProvince = name;
-  modalViewMode = 'map';
-  document.getElementById('modal-prov-name').textContent = name;
-  document.getElementById('modal-view-toggle').textContent = '리스트로 보기';
-
-  // SVG 지도 삽입
-  const mapContainer = document.getElementById('district-map-container');
-  mapContainer.innerHTML = getDistrictSVG(name);
-
-  // 리스트도 생성
-  const dists = provinceDists[name] || [];
-  const grid = document.getElementById('district-grid');
-  grid.innerHTML = dists.map(d =>
-    `<button class="district-btn ${selectedDistricts.includes(currentProvince + '>' + d) ? 'sel' : ''}" onclick="toggleDistrictList(this,'${d}')">${d}</button>`
-  ).join('');
-
-  // SVG 지도의 선택 상태 동기화
-  syncMapSelection();
-
-  // SVG 지도 클릭 이벤트 등록
-  mapContainer.querySelectorAll('.dist-path').forEach(path => {
-    path.addEventListener('click', function() {
-      const dName = this.getAttribute('data-name');
-      this.classList.toggle('sel');
-      // 라벨도 동기화
-      const svg = this.closest('svg');
-      svg.querySelectorAll('.dist-label').forEach(lbl => {
-        if (lbl.textContent.trim() === dName) {
-          lbl.classList.toggle('sel', this.classList.contains('sel'));
-        }
-      });
-      // 리스트 뷰도 동기화
-      syncListFromMap();
-      syncAllCheck();
-    });
-  });
-
-  // 뷰 전환 초기화
-  document.getElementById('district-map-view').style.display = '';
-  document.getElementById('district-list-view').style.display = 'none';
-
-  document.getElementById('all-check').checked = false;
-  document.getElementById('district-modal').classList.add('open');
-}
-
-function syncMapSelection() {
-  const mapContainer = document.getElementById('district-map-container');
-  mapContainer.querySelectorAll('.dist-path').forEach(path => {
-    const dName = path.getAttribute('data-name');
-    const key = currentProvince + '>' + dName;
-    const isSel = selectedDistricts.includes(key);
-    path.classList.toggle('sel', isSel);
-    const svg = path.closest('svg');
-    svg.querySelectorAll('.dist-label').forEach(lbl => {
-      if (lbl.textContent.trim() === dName) {
-        lbl.classList.toggle('sel', isSel);
-      }
-    });
-  });
-}
-
-function syncListFromMap() {
-  const mapContainer = document.getElementById('district-map-container');
-  const selectedNames = new Set();
-  mapContainer.querySelectorAll('.dist-path.sel').forEach(p => {
-    selectedNames.add(p.getAttribute('data-name'));
-  });
-  document.querySelectorAll('#district-grid .district-btn').forEach(btn => {
-    btn.classList.toggle('sel', selectedNames.has(btn.textContent.trim()));
-  });
-}
-
-function syncMapFromList() {
-  const selectedNames = new Set();
-  document.querySelectorAll('#district-grid .district-btn.sel').forEach(btn => {
-    selectedNames.add(btn.textContent.trim());
-  });
-  const mapContainer = document.getElementById('district-map-container');
-  mapContainer.querySelectorAll('.dist-path').forEach(path => {
-    const dName = path.getAttribute('data-name');
-    const isSel = selectedNames.has(dName);
-    path.classList.toggle('sel', isSel);
-    const svg = path.closest('svg');
-    svg.querySelectorAll('.dist-label').forEach(lbl => {
-      if (lbl.textContent.trim() === dName) {
-        lbl.classList.toggle('sel', isSel);
-      }
-    });
-  });
-}
-
-function toggleModalView() {
-  const toggle = document.getElementById('modal-view-toggle');
-  if (modalViewMode === 'map') {
-    modalViewMode = 'list';
-    toggle.textContent = '지도로 보기';
-    document.getElementById('district-map-view').style.display = 'none';
-    document.getElementById('district-list-view').style.display = '';
-    syncListFromMap();
-  } else {
-    modalViewMode = 'map';
-    toggle.textContent = '리스트로 보기';
-    document.getElementById('district-map-view').style.display = '';
-    document.getElementById('district-list-view').style.display = 'none';
-    syncMapFromList();
-  }
-}
-
-function toggleDistrictList(el, name) {
-  el.classList.toggle('sel');
-  syncMapFromList();
-  syncAllCheck();
-}
-
-function syncAllCheck() {
-  const total = document.querySelectorAll('#district-grid .district-btn').length;
-  const selCount = document.querySelectorAll('#district-grid .district-btn.sel').length;
-  document.getElementById('all-check').checked = total > 0 && total === selCount;
-}
-
-function toggleAll(cb) {
-  document.querySelectorAll('#district-grid .district-btn').forEach(btn => {
-    btn.classList.toggle('sel', cb.checked);
-  });
-  const mapContainer = document.getElementById('district-map-container');
-  mapContainer.querySelectorAll('.dist-path').forEach(path => {
-    path.classList.toggle('sel', cb.checked);
-    const dName = path.getAttribute('data-name');
-    const svg = path.closest('svg');
-    svg.querySelectorAll('.dist-label').forEach(lbl => {
-      if (lbl.textContent.trim() === dName) {
-        lbl.classList.toggle('sel', cb.checked);
-      }
-    });
-  });
-}
-
-function closeModal() {
-  document.getElementById('district-modal').classList.remove('open');
-}
-
-function confirmDistrict() {
-  const selected = [...document.querySelectorAll('#district-grid .district-btn.sel')].map(b => b.textContent.trim());
-  // 기존 해당 시/도 선택 제거 후 새로 추가
-  selectedDistricts = selectedDistricts.filter(d => !d.startsWith(currentProvince + '>'));
-  selected.forEach(d => {
-    selectedDistricts.push(currentProvince + '>' + d);
-  });
-  renderChips();
-  closeModal();
-  updateConfirmBtn();
-
-  // SVG 지도에서 선택된 시/도 강조
-  document.querySelectorAll('.region-path').forEach(path => {
-    // path의 onclick에서 시/도 이름 추출
-  });
-}
-
-function renderChips() {
-  const wrap = document.getElementById('sel-chips');
-  wrap.innerHTML = selectedDistricts.map(d => {
-    const parts = d.split('>');
-    const display = parts.length > 1 ? parts[1] : parts[0];
-    return `<div class="chip">${display} <span class="chip-x" onclick="removeChip('${d}')">×</span></div>`;
-  }).join('');
-}
-
-function removeChip(key) {
-  selectedDistricts = selectedDistricts.filter(d => d !== key);
-  renderChips();
-  updateConfirmBtn();
-}
-
-function quickSelect(el, name) {
-  el.classList.toggle('sel');
-  const key = 'quick>' + name;
-  if (el.classList.contains('sel')) {
-    if (!selectedDistricts.includes(key)) selectedDistricts.push(key);
-  } else {
-    selectedDistricts = selectedDistricts.filter(d => d !== key);
-  }
-  renderChips();
-  updateConfirmBtn();
-}
-
-function updateConfirmBtn() {
-  const btn = document.getElementById('confirm-btn');
-  if (selectedDistricts.length > 0) {
-    btn.disabled = false;
-    const first = selectedDistricts[0].split('>').pop();
-    if (selectedDistricts.length === 1) {
-      btn.textContent = `${first} 맛집 보기`;
-    } else {
-      btn.textContent = `${first} 외 ${selectedDistricts.length - 1}개 지역 맛집 보기`;
-    }
-  } else {
-    btn.disabled = true;
-    btn.textContent = '선택 확정';
-  }
-}
-
-/* ══════════════════════════════════════
-   리뷰 탭 전환 (폰 3)
-══════════════════════════════════════ */
-function switchReviewTab(tab, el) {
-  document.querySelectorAll('.review-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.review-panel').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('panel-' + tab).classList.add('active');
-}
-
-/* ══════════════════════════════════════
-   기타 UI
-══════════════════════════════════════ */
-function goScreen(id) { /* 폰1 → 폰2 연결 */ }
-function goScreen2(id) { /* 폰2 → 폰3 연결 */ }
-function goScreen3(id) { /* 폰3 → 폰4 연결 */ }
-
-function setChip(el) {
-  el.closest('.filter-bar').querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-}
-
-function setStar3(n) {
-  document.querySelectorAll('#star-row .star-btn').forEach((s, i) => {
-    s.classList.toggle('lit', i < n);
-  });
-}
-</script>
 </body>
 </html>
