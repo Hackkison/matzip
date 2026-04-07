@@ -66,7 +66,7 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
       : recentRestaurants.filter((r) => r.category === activeCategory)
 
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50">
+    <div className="flex flex-col bg-zinc-50" style={{ height: 'calc(100dvh - 64px)' }}>
       {/* D: 확장 헤더 — 닉네임 + 맛집 수 + 검색창 */}
       <header className="bg-[#1B4332] px-5 pt-5 pb-5 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
@@ -131,13 +131,13 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
         })}
       </div>
 
-      {/* 지도 */}
-      <div className="shrink-0 flex flex-col items-center bg-white px-4 py-2">
+      {/* 지도 — 남은 공간 대부분 차지 */}
+      <div className="flex-1 min-h-0 flex items-center justify-center bg-white px-4 py-3">
         <KoreaMap onSelect={(code, name) => setModal({ code, name })} />
       </div>
 
-      {/* C: 최근 등록 맛집 미리보기 */}
-      <div className="bg-white border-t border-zinc-100 pt-3.5 pb-3 flex-1">
+      {/* C: 최근 등록 맛집 미리보기 — 하단 고정 */}
+      <div className="shrink-0 bg-white border-t border-zinc-100 pt-3 pb-2">
         <div className="flex items-center justify-between px-4 mb-2.5">
           <p className="text-sm font-bold text-zinc-800">
             {activeCategory === '전체' ? '최근 등록 맛집' : `${activeCategory} 최근 맛집`}
