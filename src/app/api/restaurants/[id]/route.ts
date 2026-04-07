@@ -3,11 +3,15 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { revalidateTag } from 'next/cache'
+import { checkRateLimit } from '@/lib/ratelimit'
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const rl = await checkRateLimit(request)
+  if (rl) return rl
+
   const { id } = await params
 
   // 사용자 세션 확인

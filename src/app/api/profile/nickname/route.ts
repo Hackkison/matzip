@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
+import { checkRateLimit } from '@/lib/ratelimit'
 
 const nicknameSchema = z.object({
   // 2~20자, 특수문자 제한 (한글·영문·숫자·밑줄·하이픈만 허용)
@@ -14,6 +15,9 @@ const nicknameSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  const rl = await checkRateLimit(request)
+  if (rl) return rl
+
   const body = await request.json()
   const result = nicknameSchema.safeParse(body)
   if (!result.success) {
