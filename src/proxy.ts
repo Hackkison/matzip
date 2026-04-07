@@ -28,7 +28,7 @@ function checkCsrf(request: NextRequest): NextResponse | null {
   return null
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // CSRF 검증 (Supabase 세션 조회 전에 먼저 차단)
   const csrfError = checkCsrf(request)
   if (csrfError) return csrfError
