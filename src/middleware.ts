@@ -1,7 +1,40 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// 상태 변경 API 요청에 대해 Origin 헤더 검증 (CSRF 방어)
+function checkCsrf(request: NextRequest): NextResponse | null {
+  const { pathname, method } = request.nextUrl as unknown as { pathname: string; method: never }
+  const httpMethod = request.method
+  const isMutating = ['POST', 'DELETE', 'PATCH', 'PUT'].includes(httpMethod)
+  const isApiRoute = pathname.startsWith('/api/')
+
+  if (!isMutating || !isApiRoute) return null
+
+  const origin = request.headers.get('origin')
+  const host = request.headers.get('host')
+
+  // origin이 없거나 현재 호스트와 다르면 차단
+  if (!origin || !host) {
+    return NextResponse.json({ error: '잘못된 요청입니다' }, { status: 403 })
+  }
+
+  try {
+    const originHost = new URL(origin).host
+    if (originHost !== host) {
+      return NextResponse.json({ error: '잘못된 요청입니다' }, { status: 403 })
+    }
+  } catch {
+    return NextResponse.json({ error: '잘못된 요청입니다' }, { status: 403 })
+  }
+
+  return null
+}
+
 export async function middleware(request: NextRequest) {
+  // CSRF 검증 (Supabase 세션 조회 전에 먼저 차단)
+  const csrfError = checkCsrf(request)
+  if (csrfError) return csrfError
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
