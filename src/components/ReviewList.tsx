@@ -51,11 +51,16 @@ function Stars({ rating }: { rating: number }) {
   )
 }
 
+type SortOption = '최신순' | '별점높은순' | '별점낮은순'
+type FilterOption = '전체' | '사진있는리뷰'
+
 export default function ReviewList({ restaurantId, initialReviews, currentUserId, isAdmin }: Props) {
   const supabase = createClient()
   const [reviews, setReviews] = useState(initialReviews)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [sort, setSort] = useState<SortOption>('최신순')
+  const [filter, setFilter] = useState<FilterOption>('전체')
 
   const reload = async () => {
     const { data } = await supabase
@@ -124,6 +129,14 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
 
   const myReview = reviews.find((r) => r.user_id === currentUserId)
 
+  const displayReviews = reviews
+    .filter((r) => filter === '전체' || (r.image_urls && r.image_urls.length > 0))
+    .sort((a, b) => {
+      if (sort === '별점높은순') return b.rating - a.rating
+      if (sort === '별점낮은순') return a.rating - b.rating
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+
   return (
     <div className="flex flex-col gap-4">
       {/* 평점 요약 */}
@@ -136,6 +149,36 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
           </span>
         )}
       </div>
+
+      {/* 필터 / 정렬 */}
+      {reviews.length > 0 && (
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-1.5">
+            {(['전체', '사진있는리뷰'] as FilterOption[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
+                  filter === f
+                    ? 'bg-[#1B4332] text-white border-[#1B4332]'
+                    : 'text-zinc-500 border-zinc-200 hover:border-zinc-400'
+                }`}
+              >
+                {f === '사진있는리뷰' ? '📷 사진' : '전체'}
+              </button>
+            ))}
+          </div>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortOption)}
+            className="text-xs text-zinc-500 border border-zinc-200 rounded-lg px-2 py-1 focus:outline-none focus:border-[#1B4332]"
+          >
+            <option value="최신순">최신순</option>
+            <option value="별점높은순">별점 높은순</option>
+            <option value="별점낮은순">별점 낮은순</option>
+          </select>
+        </div>
+      )}
 
       {/* 리뷰 작성 버튼 (본인 리뷰 없을 때만) */}
       {!myReview && !showForm && (
@@ -161,8 +204,11 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
       {reviews.length === 0 && !showForm && (
         <p className="text-sm text-zinc-400 text-center py-4">첫 번째 리뷰를 남겨보세요</p>
       )}
+      {reviews.length > 0 && displayReviews.length === 0 && (
+        <p className="text-sm text-zinc-400 text-center py-4">사진이 있는 리뷰가 없어요</p>
+      )}
 
-      {reviews.map((review) => {
+      {displayReviews.map((review) => {
         const likeCount = (review.review_likes ?? []).length
         const liked = (review.review_likes ?? []).some(l => l.user_id === currentUserId)
 
