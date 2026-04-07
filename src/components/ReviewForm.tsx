@@ -61,8 +61,9 @@ export default function ReviewForm({ restaurantId, existing, onDone, onCancel }:
   }
 
   const handleSubmit = async () => {
-    if (rating === 0) { setError('별점을 선택해주세요'); return }
+    if (rating === 0 || rating < 0.5 || rating > 5) { setError('별점을 선택해주세요'); return }
     if (!content.trim()) { setError('내용을 입력해주세요'); return }
+    if (content.trim().length > 1000) { setError('리뷰는 1000자 이하로 입력해주세요'); return }
     setSubmitting(true)
     setError('')
 

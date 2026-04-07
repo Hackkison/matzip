@@ -2,12 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { z } from 'zod'
+
+const nicknameSchema = z.object({
+  // 2~20자, 특수문자 제한 (한글·영문·숫자·밑줄·하이픈만 허용)
+  nickname: z
+    .string()
+    .min(2, '닉네임은 2자 이상이어야 합니다')
+    .max(20, '닉네임은 20자 이하여야 합니다')
+    .regex(/^[가-힣a-zA-Z0-9_-]+$/, '닉네임에 사용할 수 없는 문자가 포함되어 있습니다'),
+})
 
 export async function POST(request: NextRequest) {
-  const { nickname } = await request.json()
-  if (!nickname || typeof nickname !== 'string' || !nickname.trim()) {
-    return NextResponse.json({ error: '닉네임을 입력해주세요' }, { status: 400 })
+  const body = await request.json()
+  const result = nicknameSchema.safeParse(body)
+  if (!result.success) {
+    return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
   }
+  const { nickname } = result.data
 
   // 사용자 세션 확인
   const cookieStore = await cookies()
@@ -34,7 +46,7 @@ export async function POST(request: NextRequest) {
   const { count } = await admin
     .from('profiles')
     .select('*', { count: 'exact', head: true })
-    .eq('name', nickname.trim())
+    .eq('name', nickname)
     .neq('id', user.id)
 
   if (count && count > 0) {
@@ -43,7 +55,7 @@ export async function POST(request: NextRequest) {
 
   const { error } = await admin
     .from('profiles')
-    .update({ name: nickname.trim() })
+    .update({ name: nickname })
     .eq('id', user.id)
 
   if (error) {
