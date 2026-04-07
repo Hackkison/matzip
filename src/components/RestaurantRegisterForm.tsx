@@ -73,6 +73,12 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
+  // 직접 입력 모드
+  const [manualMode, setManualMode] = useState(false)
+  const [manualName, setManualName] = useState('')
+  const [manualAddress, setManualAddress] = useState('')
+  const [manualPhone, setManualPhone] = useState('')
+
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const isSelected = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -133,6 +139,27 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
     setError('')
   }
 
+  const handleSwitchManual = () => {
+    setManualMode(true)
+    setManualName(query) // 검색어를 가게명 초기값으로
+    setSelected(null)
+    setQuery('')
+    setSuggestions([])
+    setShowSuggestions(false)
+    setDuplicateId(null)
+    setError('')
+  }
+
+  const handleSwitchSearch = () => {
+    setManualMode(false)
+    setManualName('')
+    setManualAddress('')
+    setManualPhone('')
+    setCategory('')
+    setPriceRange(null)
+    setError('')
+  }
+
   const handleQueryChange = (value: string) => {
     isSelected.current = false
     setSelected(null)
@@ -155,7 +182,11 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
   }
 
   const handleSubmit = async () => {
-    if (!selected) return
+    if (!manualMode && !selected) return
+    if (manualMode && !manualName.trim()) { setError('가게명을 입력해주세요'); return }
+    if (manualMode && !manualAddress.trim()) { setError('주소를 입력해주세요'); return }
+    if (!category) { setError('카테고리를 선택해주세요'); return }
+
     setSubmitting(true)
     setError('')
 
@@ -181,17 +212,58 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
       }
     }
 
+    // 직접 입력 모드: 주소로 좌표 조회
+    if (manualMode) {
+      let lat = 0, lng = 0
+      try {
+        const res = await fetch(`/api/kakao/geocode?address=${encodeURIComponent(manualAddress)}`)
+        const coord = await res.json()
+        lat = coord.lat ?? 0
+        lng = coord.lng ?? 0
+      } catch {
+        // 좌표 조회 실패 시 0,0으로 저장
+      }
+
+      const { data, error } = await supabase
+        .from('restaurants')
+        .insert({
+          name: manualName.trim(),
+          address: manualAddress.trim(),
+          road_address: null,
+          category,
+          phone: manualPhone.trim() || null,
+          lat,
+          lng,
+          kakao_id: null,
+          created_by: user.id,
+          image_url: imageUrl,
+          price_range: priceRange,
+        })
+        .select()
+        .single()
+
+      if (error) {
+        setError('등록 중 오류가 발생했습니다.')
+        setSubmitting(false)
+        return
+      }
+
+      await revalidateRestaurantsCache()
+      router.push(`/restaurants/${data.id}`)
+      return
+    }
+
     const { data, error } = await supabase
       .from('restaurants')
       .insert({
-        name: selected.place_name,
-        address: selected.address_name,
-        road_address: selected.road_address_name || null,
+        name: selected!.place_name,
+        address: selected!.address_name,
+        road_address: selected!.road_address_name || null,
         category,
-        phone: selected.phone || null,
-        lat: parseFloat(selected.y),
-        lng: parseFloat(selected.x),
-        kakao_id: selected.id,
+        phone: selected!.phone || null,
+        lat: parseFloat(selected!.y),
+        lng: parseFloat(selected!.x),
+        kakao_id: selected!.id,
         created_by: user.id,
         image_url: imageUrl,
         price_range: priceRange,
@@ -213,66 +285,125 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
     ? `/restaurants?region=${regionCodes}&name=${regionNames}`
     : '/restaurants'
 
+  const showNoResults = showSuggestions && !loading && suggestions.length === 0
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4 md:px-8">
-        <Link href={backHref} className="text-zinc-400 hover:text-zinc-600">
-          <ChevronLeft size={20} />
-        </Link>
-        <h1 className="text-base font-semibold text-[#1B4332]">맛집 등록</h1>
+        {manualMode ? (
+          <button onClick={handleSwitchSearch} className="text-zinc-400 hover:text-zinc-600">
+            <ChevronLeft size={20} />
+          </button>
+        ) : (
+          <Link href={backHref} className="text-zinc-400 hover:text-zinc-600">
+            <ChevronLeft size={20} />
+          </Link>
+        )}
+        <h1 className="text-base font-semibold text-[#1B4332]">
+          {manualMode ? '직접 등록' : '맛집 등록'}
+        </h1>
       </header>
 
       <main className="flex flex-1 flex-col px-4 py-6 md:px-8 max-w-lg mx-auto w-full gap-6">
-        {/* 검색 */}
-        <div className="relative">
-          <label className="text-sm font-medium text-zinc-700 mb-1.5 block">가게명 검색</label>
-          <div className="relative flex items-center">
-            <Search size={16} className="absolute left-3 text-zinc-400 pointer-events-none" />
-            <input
-              type="text"
-              value={query}
-              onChange={e => handleQueryChange(e.target.value)}
-              placeholder="가게명을 입력하세요 (2글자 이상)"
-              className="w-full pl-9 pr-9 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
-              autoComplete="off"
-            />
-            {query && (
-              <button onClick={handleClear} className="absolute right-3 text-zinc-400 hover:text-zinc-600">
-                <X size={16} />
-              </button>
+
+        {/* 직접 입력 모드 */}
+        {manualMode ? (
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="text-sm font-medium text-zinc-700 mb-1.5 block">가게명 <span className="text-red-400">*</span></label>
+              <input
+                type="text"
+                value={manualName}
+                onChange={e => setManualName(e.target.value)}
+                placeholder="가게명을 입력하세요"
+                autoFocus
+                className="w-full px-3 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-700 mb-1.5 block">주소 <span className="text-red-400">*</span></label>
+              <p className="text-xs text-zinc-400 mb-1.5">시/군을 포함해야 지도에 정확히 표시됩니다</p>
+              <input
+                type="text"
+                value={manualAddress}
+                onChange={e => setManualAddress(e.target.value)}
+                placeholder="예: 창원시 가술산남로 34번길 34"
+                className="w-full px-3 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-zinc-700 mb-1.5 block">
+                전화번호 <span className="text-zinc-400 font-normal">(선택)</span>
+              </label>
+              <input
+                type="tel"
+                value={manualPhone}
+                onChange={e => setManualPhone(e.target.value)}
+                placeholder="예: 055-123-4567"
+                className="w-full px-3 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
+              />
+            </div>
+          </div>
+        ) : (
+          /* 카카오맵 검색 모드 */
+          <div className="relative">
+            <label className="text-sm font-medium text-zinc-700 mb-1.5 block">가게명 검색</label>
+            <div className="relative flex items-center">
+              <Search size={16} className="absolute left-3 text-zinc-400 pointer-events-none" />
+              <input
+                type="text"
+                value={query}
+                onChange={e => handleQueryChange(e.target.value)}
+                placeholder="가게명을 입력하세요 (2글자 이상)"
+                className="w-full pl-9 pr-9 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
+                autoComplete="off"
+              />
+              {query && (
+                <button onClick={handleClear} className="absolute right-3 text-zinc-400 hover:text-zinc-600">
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* 자동완성 */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden">
+                {suggestions.map(place => (
+                  <button
+                    key={place.id}
+                    onClick={() => handleSelect(place)}
+                    className="w-full text-left px-4 py-3 hover:bg-zinc-50 border-b border-zinc-100 last:border-0"
+                  >
+                    <p className="text-sm font-medium text-zinc-800">{place.place_name}</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      {place.road_address_name || place.address_name}
+                    </p>
+                    <p className="text-xs text-zinc-300 mt-0.5">
+                      {place.category_name.split(' > ').pop()}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {loading && query.length >= 2 && (
+              <p className="mt-2 text-xs text-zinc-400">검색 중...</p>
+            )}
+
+            {/* 검색 결과 없음 → 직접 등록 유도 */}
+            {showNoResults && (
+              <div className="mt-2 flex flex-col gap-2">
+                <p className="text-xs text-zinc-400">선택한 지역에서 검색 결과가 없어요</p>
+                <button
+                  onClick={handleSwitchManual}
+                  className="w-full py-2.5 bg-[#1B4332] text-white rounded-lg text-sm font-medium hover:bg-[#163728] transition-colors"
+                >
+                  직접 등록
+                </button>
+              </div>
             )}
           </div>
-
-          {/* 자동완성 */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden">
-              {suggestions.map(place => (
-                <button
-                  key={place.id}
-                  onClick={() => handleSelect(place)}
-                  className="w-full text-left px-4 py-3 hover:bg-zinc-50 border-b border-zinc-100 last:border-0"
-                >
-                  <p className="text-sm font-medium text-zinc-800">{place.place_name}</p>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    {place.road_address_name || place.address_name}
-                  </p>
-                  <p className="text-xs text-zinc-300 mt-0.5">
-                    {place.category_name.split(' > ').pop()}
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {loading && query.length >= 2 && (
-            <p className="mt-2 text-xs text-zinc-400">검색 중...</p>
-          )}
-          {showSuggestions && !loading && suggestions.length === 0 && (
-            <p className="mt-2 text-xs text-zinc-400">
-              선택한 지역에서 검색 결과가 없어요
-            </p>
-          )}
-        </div>
+        )}
 
         {/* 중복 등록 안내 */}
         {duplicateId && (
@@ -287,11 +418,15 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
           </div>
         )}
 
-        {/* 선택된 가게 정보 */}
-        {selected && !duplicateId && (
+        {/* 카테고리 / 금액대 / 사진 / 등록 버튼 */}
+        {(selected && !duplicateId) || manualMode ? (
           <>
-            <Field label="주소" value={selected.road_address_name || selected.address_name} />
-            <Field label="전화번호" value={selected.phone || '정보 없음'} />
+            {selected && !manualMode && (
+              <>
+                <Field label="주소" value={selected.road_address_name || selected.address_name} />
+                <Field label="전화번호" value={selected.phone || '정보 없음'} />
+              </>
+            )}
 
             <div>
               <label className="text-sm font-medium text-zinc-700 mb-1.5 block">카테고리</label>
@@ -379,7 +514,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
               {submitting ? '등록 중...' : '맛집 등록'}
             </button>
           </>
-        )}
+        ) : null}
       </main>
     </div>
   )

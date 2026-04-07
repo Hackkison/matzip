@@ -24,7 +24,7 @@ export default async function RestaurantDetailPage({ params }: Props) {
     supabase.from('restaurants').select('*').eq('id', id).single(),
     supabase
       .from('reviews')
-      .select('id, rating, content, created_at, user_id, image_urls, profiles(name)')
+      .select('id, rating, content, created_at, user_id, image_urls, profiles(name), review_likes(user_id)')
       .eq('restaurant_id', id)
       .order('created_at', { ascending: false }),
     supabase.from('profiles').select('is_admin').eq('id', user.id).single(),

@@ -3,8 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Heart } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import ReviewForm from './ReviewForm'
+
+interface ReviewLike {
+  user_id: string
+}
 
 interface Review {
   id: string
@@ -14,6 +19,7 @@ interface Review {
   user_id: string
   image_urls: string[] | null
   profiles: { name: string | null }[] | { name: string | null } | null
+  review_likes: ReviewLike[]
 }
 
 interface Props {
@@ -23,12 +29,24 @@ interface Props {
   isAdmin?: boolean
 }
 
+// 0.5 단위 별 표시 컴포넌트
 function Stars({ rating }: { rating: number }) {
   return (
-    <span className="text-sm">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <span key={s} className={s <= rating ? 'text-yellow-400' : 'text-zinc-200'}>★</span>
-      ))}
+    <span className="flex">
+      {[1, 2, 3, 4, 5].map((s) => {
+        const fill = rating >= s ? 100 : rating >= s - 0.5 ? 50 : 0
+        return (
+          <span key={s} className="relative inline-block text-sm leading-none" style={{ width: '1em' }}>
+            <span className="text-zinc-200">★</span>
+            <span
+              className="absolute inset-0 overflow-hidden text-yellow-400"
+              style={{ width: `${fill}%` }}
+            >
+              ★
+            </span>
+          </span>
+        )
+      })}
     </span>
   )
 }
@@ -42,7 +60,7 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
   const reload = async () => {
     const { data } = await supabase
       .from('reviews')
-      .select('id, rating, content, created_at, user_id, image_urls, profiles(name)')
+      .select('id, rating, content, created_at, user_id, image_urls, profiles(name), review_likes(user_id)')
       .eq('restaurant_id', restaurantId)
       .order('created_at', { ascending: false })
     setReviews((data as Review[]) ?? [])
@@ -59,6 +77,44 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
       await supabase.from('reviews').delete().eq('id', reviewId)
     }
     setReviews((prev) => prev.filter((r) => r.id !== reviewId))
+  }
+
+  const toggleLike = async (reviewId: string) => {
+    if (!currentUserId) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+
+    const review = reviews.find(r => r.id === reviewId)
+    if (!review) return
+
+    const liked = (review.review_likes ?? []).some(l => l.user_id === currentUserId)
+
+    // 낙관적 업데이트
+    setReviews(prev => prev.map(r => {
+      if (r.id !== reviewId) return r
+      const likes = r.review_likes ?? []
+      return {
+        ...r,
+        review_likes: liked
+          ? likes.filter(l => l.user_id !== currentUserId)
+          : [...likes, { user_id: currentUserId }],
+      }
+    }))
+
+    if (liked) {
+      const { error } = await supabase
+        .from('review_likes')
+        .delete()
+        .eq('review_id', reviewId)
+        .eq('user_id', currentUserId)
+      if (error) await reload()
+    } else {
+      const { error } = await supabase
+        .from('review_likes')
+        .insert({ review_id: reviewId, user_id: currentUserId })
+      if (error) await reload()
+    }
   }
 
   const avgRating =
@@ -106,72 +162,93 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
         <p className="text-sm text-zinc-400 text-center py-4">첫 번째 리뷰를 남겨보세요</p>
       )}
 
-      {reviews.map((review) => (
-        <div key={review.id} className="flex flex-col gap-1.5 py-3 border-b border-zinc-100 last:border-0">
-          {editingId === review.id ? (
-            <div className="p-3 border border-zinc-200 rounded-xl">
-              <ReviewForm
-                restaurantId={restaurantId}
-                existing={{ id: review.id, rating: review.rating, content: review.content }}
-                onDone={reload}
-                onCancel={() => setEditingId(null)}
-              />
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/users/${review.user_id}`}
-                    className="text-xs font-medium text-zinc-700 hover:text-[#1B4332] hover:underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {(Array.isArray(review.profiles)
-                      ? review.profiles[0]?.name
-                      : review.profiles?.name) ?? '익명'}
-                  </Link>
-                  <Stars rating={review.rating} />
-                </div>
-                {(review.user_id === currentUserId || isAdmin) && (
-                  <div className="flex gap-1">
-                    {review.user_id === currentUserId && (
-                      <button
-                        onClick={() => setEditingId(review.id)}
-                        className="text-xs text-zinc-400 hover:text-zinc-600 px-2 py-1.5 min-h-[36px]"
-                      >
-                        수정
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(review.id, review.user_id !== currentUserId)}
-                      className="text-xs text-zinc-400 hover:text-red-500 px-2 py-1.5 min-h-[36px]"
+      {reviews.map((review) => {
+        const likeCount = (review.review_likes ?? []).length
+        const liked = (review.review_likes ?? []).some(l => l.user_id === currentUserId)
+
+        return (
+          <div key={review.id} className="flex flex-col gap-1.5 py-3 border-b border-zinc-100 last:border-0">
+            {editingId === review.id ? (
+              <div className="p-3 border border-zinc-200 rounded-xl">
+                <ReviewForm
+                  restaurantId={restaurantId}
+                  existing={{ id: review.id, rating: review.rating, content: review.content }}
+                  onDone={reload}
+                  onCancel={() => setEditingId(null)}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/users/${review.user_id}`}
+                      className="text-xs font-medium text-zinc-700 hover:text-[#1B4332] hover:underline"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      삭제
-                    </button>
+                      {(Array.isArray(review.profiles)
+                        ? review.profiles[0]?.name
+                        : review.profiles?.name) ?? '익명'}
+                    </Link>
+                    <Stars rating={review.rating} />
+                    <span className="text-xs text-zinc-400">{review.rating}</span>
+                  </div>
+                  {(review.user_id === currentUserId || isAdmin) && (
+                    <div className="flex gap-1">
+                      {review.user_id === currentUserId && (
+                        <button
+                          onClick={() => setEditingId(review.id)}
+                          className="text-xs text-zinc-400 hover:text-zinc-600 px-2 py-1.5 min-h-[36px]"
+                        >
+                          수정
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(review.id, review.user_id !== currentUserId)}
+                        className="text-xs text-zinc-400 hover:text-red-500 px-2 py-1.5 min-h-[36px]"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-sm text-zinc-600 leading-relaxed">{review.content}</p>
+
+                {/* 리뷰 사진 */}
+                {review.image_urls && review.image_urls.length > 0 && (
+                  <div className="flex gap-2 flex-wrap mt-1">
+                    {review.image_urls.map((url, idx) => (
+                      <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
+                        className="relative w-20 h-20 rounded-lg overflow-hidden bg-zinc-100 block shrink-0">
+                        <Image src={url} alt={`리뷰 사진 ${idx + 1}`} fill sizes="80px" className="object-cover hover:opacity-90 transition-opacity" />
+                      </a>
+                    ))}
                   </div>
                 )}
-              </div>
-              <p className="text-sm text-zinc-600 leading-relaxed">{review.content}</p>
 
-              {/* 리뷰 사진 */}
-              {review.image_urls && review.image_urls.length > 0 && (
-                <div className="flex gap-2 flex-wrap mt-1">
-                  {review.image_urls.map((url, idx) => (
-                    <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
-                      className="relative w-20 h-20 rounded-lg overflow-hidden bg-zinc-100 block shrink-0">
-                      <Image src={url} alt={`리뷰 사진 ${idx + 1}`} fill sizes="80px" className="object-cover hover:opacity-90 transition-opacity" />
-                    </a>
-                  ))}
+                {/* 하단: 날짜 + 좋아요 */}
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-zinc-300">
+                    {new Date(review.created_at).toLocaleDateString('ko-KR')}
+                  </p>
+                  <button
+                    onClick={() => toggleLike(review.id)}
+                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
+                      liked
+                        ? 'text-red-500 bg-red-50'
+                        : 'text-zinc-400 hover:text-red-400 hover:bg-red-50'
+                    }`}
+                  >
+                    <Heart size={12} fill={liked ? 'currentColor' : 'none'} />
+                    {likeCount > 0 && <span>{likeCount}</span>}
+                  </button>
                 </div>
-              )}
-
-              <p className="text-xs text-zinc-300">
-                {new Date(review.created_at).toLocaleDateString('ko-KR')}
-              </p>
-            </>
-          )}
-        </div>
-      ))}
+              </>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

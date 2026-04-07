@@ -62,11 +62,23 @@ export default function KakaoMapView() {
   const mapInstanceRef = useRef<KakaoMap | null>(null)
   const markersRef = useRef<KakaoMarker[]>([])
   const infoWindowRef = useRef<KakaoInfoWindow | null>(null)
+  interface ManualRestaurant {
+    id: string
+    name: string
+    address: string
+    phone: string | null
+    lat: number
+    lng: number
+    category: string
+  }
+
   const [places, setPlaces] = useState<Place[]>([])
+  const [manualRestaurants, setManualRestaurants] = useState<ManualRestaurant[]>([])
   const [loading, setLoading] = useState(false)
   const [sdkReady, setSdkReady] = useState(false)
   const [gpsError, setGpsError] = useState(false)
   const myMarkerRef = useRef<KakaoMarker | null>(null)
+  const manualMarkersRef = useRef<KakaoMarker[]>([])
   const supabase = createClient()
   // kakao_id → 우리 DB restaurant id 매핑
   const registeredRef = useRef<Map<string, string>>(new Map())
@@ -80,14 +92,27 @@ export default function KakaoMapView() {
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/kakao/search?query=음식점&rect=${rect}`)
-      const data = await res.json()
-      const docs: Place[] = data.documents ?? []
-      setPlaces(docs)
+      const [kakaoRes, manualRes] = await Promise.all([
+        fetch(`/api/kakao/search?query=음식점&rect=${rect}`).then(r => r.json()),
+        // 직접 등록 맛집 (kakao_id 없음, 좌표 있음) 현재 지도 영역 내 조회
+        supabase
+          .from('restaurants')
+          .select('id, name, address, phone, lat, lng, category')
+          .is('kakao_id', null)
+          .neq('lat', 0)
+          .gte('lat', sw.getLat())
+          .lte('lat', ne.getLat())
+          .gte('lng', sw.getLng())
+          .lte('lng', ne.getLng()),
+      ])
 
-      // 우리 DB에 등록된 식당 조회
+      const docs: Place[] = kakaoRes.documents ?? []
+      setPlaces(docs)
+      setManualRestaurants((manualRes.data ?? []) as ManualRestaurant[])
+
+      // 우리 DB에 등록된 카카오 식당 조회
       if (docs.length > 0) {
-        const kakaoIds = docs.map(d => d.id)
+        const kakaoIds = docs.map((d: Place) => d.id)
         const { data: registered } = await supabase
           .from('restaurants')
           .select('id, kakao_id')
@@ -193,6 +218,40 @@ export default function KakaoMapView() {
       markersRef.current.push(marker)
     })
   }, [places])
+
+  // 직접 등록 맛집 마커
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.kakao?.maps) return
+
+    manualMarkersRef.current.forEach(m => m.setMap(null))
+    manualMarkersRef.current = []
+
+    manualRestaurants.forEach(r => {
+      const marker = new window.kakao.maps.Marker({
+        map: mapInstanceRef.current!,
+        position: new window.kakao.maps.LatLng(r.lat, r.lng),
+        title: r.name,
+      })
+
+      const content = `
+        <div style="padding:10px 14px;min-width:160px;font-family:inherit">
+          <p style="font-size:13px;font-weight:600;margin:0 0 2px">${r.name}</p>
+          <p style="font-size:11px;color:#71717a;margin:0 0 2px">${r.category}</p>
+          ${r.phone ? `<p style="font-size:11px;color:#71717a;margin:0 0 4px">${r.phone}</p>` : ''}
+          <a href="/restaurants/${r.id}" style="display:block;margin-top:6px;padding:4px 8px;background:#1B4332;color:#fff;font-size:11px;font-weight:600;border-radius:6px;text-align:center;text-decoration:none">리뷰 보러가기</a>
+        </div>
+      `
+      const infoWindow = new window.kakao.maps.InfoWindow({ content, removable: true })
+
+      window.kakao.maps.event.addListener(marker, 'click', () => {
+        if (infoWindowRef.current) infoWindowRef.current.close()
+        infoWindow.open(mapInstanceRef.current!, marker)
+        infoWindowRef.current = infoWindow
+      })
+
+      manualMarkersRef.current.push(marker)
+    })
+  }, [manualRestaurants])
 
   useEffect(() => {
     if (sdkReady) initMap()

@@ -14,6 +14,23 @@ interface Props {
   onCancel?: () => void
 }
 
+// 0.5 단위 별 표시 컴포넌트
+function StarDisplay({ index, value, size = 'lg' }: { index: number; value: number; size?: 'lg' | 'sm' }) {
+  const fill = value >= index ? 100 : value >= index - 0.5 ? 50 : 0
+  const sizeClass = size === 'lg' ? 'text-2xl' : 'text-base'
+  return (
+    <span className={`relative inline-block ${sizeClass} leading-none select-none`} style={{ width: '1em' }}>
+      <span className="text-zinc-200">★</span>
+      <span
+        className="absolute inset-0 overflow-hidden text-yellow-400"
+        style={{ width: `${fill}%` }}
+      >
+        ★
+      </span>
+    </span>
+  )
+}
+
 export default function ReviewForm({ restaurantId, existing, onDone, onCancel }: Props) {
   const supabase = createClient()
   const [rating, setRating] = useState(existing?.rating ?? 0)
@@ -29,7 +46,6 @@ export default function ReviewForm({ restaurantId, existing, onDone, onCancel }:
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
 
-    // 최대 5장 제한
     const remaining = MAX_IMAGES - imageFiles.length
     const toAdd = files.slice(0, remaining)
 
@@ -94,21 +110,40 @@ export default function ReviewForm({ restaurantId, existing, onDone, onCancel }:
     onDone()
   }
 
+  const displayValue = hover || rating
+
   return (
     <div className="flex flex-col gap-3">
-      {/* 별점 */}
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((s) => (
-          <button
-            key={s}
-            onClick={() => setRating(s)}
-            onMouseEnter={() => setHover(s)}
-            onMouseLeave={() => setHover(0)}
-            className="text-2xl leading-none transition-transform hover:scale-110"
-          >
-            <span className={(hover || rating) >= s ? 'text-yellow-400' : 'text-zinc-200'}>★</span>
-          </button>
-        ))}
+      {/* 별점 (0.5 단위) */}
+      <div className="flex flex-col gap-1">
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <span
+              key={s}
+              className="relative cursor-pointer"
+              onMouseLeave={() => setHover(0)}
+            >
+              <StarDisplay index={s} value={displayValue} size="lg" />
+              {/* 왼쪽 절반 → s-0.5점 */}
+              <button
+                type="button"
+                className="absolute inset-y-0 left-0 w-1/2"
+                onClick={() => setRating(s - 0.5)}
+                onMouseEnter={() => setHover(s - 0.5)}
+              />
+              {/* 오른쪽 절반 → s점 */}
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 w-1/2"
+                onClick={() => setRating(s)}
+                onMouseEnter={() => setHover(s)}
+              />
+            </span>
+          ))}
+        </div>
+        {displayValue > 0 && (
+          <span className="text-xs text-zinc-400">{displayValue}점</span>
+        )}
       </div>
 
       {/* 내용 */}
