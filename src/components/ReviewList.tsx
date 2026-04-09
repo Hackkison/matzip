@@ -303,7 +303,7 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
                     {currentUserId && review.user_id !== currentUserId && !isAdmin && (
                       <button
                         onClick={() => setReportingId(review.id)}
-                        className="p-1.5 text-zinc-300 hover:text-orange-400 rounded transition-colors"
+                        className="p-1.5 text-red-400 hover:text-red-600 rounded transition-colors"
                         title="삭제 요청"
                       >
                         <Flag size={11} />

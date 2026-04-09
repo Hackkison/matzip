@@ -31,10 +31,17 @@ export default async function AdminPage() {
       .order('created_at', { ascending: false }),
     supabase
       .from('review_delete_requests')
-      .select('id, reason, created_at, status, reviews(id, content, rating, restaurant_id, restaurants(name)), profiles(name)')
+      .select('id, reason, created_at, status, requester_id, reviews(id, content, rating, restaurant_id, restaurants(name))')
       .eq('status', 'pending')
       .order('created_at', { ascending: false }),
   ])
+
+  // requester_id → profiles 별도 조회 (FK가 auth.users를 참조해 자동 join 불가)
+  const requesterIds = [...new Set((requests ?? []).map((r) => r.requester_id))]
+  const { data: requesterProfiles } = requesterIds.length > 0
+    ? await supabase.from('profiles').select('id, name').in('id', requesterIds)
+    : { data: [] as { id: string; name: string }[] }
+  const profileMap = Object.fromEntries((requesterProfiles ?? []).map((p) => [p.id, p.name]))
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -159,7 +166,7 @@ export default async function AdminPage() {
                 const review = Array.isArray(req.reviews) ? req.reviews[0] : req.reviews as {
                   id: string; content: string; rating: number; restaurant_id: string; restaurants: { name: string } | { name: string }[] | null
                 } | null
-                const requester = Array.isArray(req.profiles) ? req.profiles[0] : req.profiles as { name: string } | null
+                const requesterName = profileMap[req.requester_id] ?? '알 수 없음'
                 const restaurantName = review
                   ? (Array.isArray(review.restaurants) ? review.restaurants[0]?.name : (review.restaurants as { name: string } | null)?.name)
                   : null
@@ -168,7 +175,7 @@ export default async function AdminPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-xs font-medium text-zinc-700">
-                          {requester?.name ?? '알 수 없음'}
+                          {requesterName}
                         </span>
                         <span className="text-xs text-zinc-400">→</span>
                         {review && (

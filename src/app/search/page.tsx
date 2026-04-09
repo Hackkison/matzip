@@ -6,7 +6,7 @@ import { ChevronLeft, MapPin, Search } from 'lucide-react'
 const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '디저트', '기타']
 
 interface Props {
-  searchParams: Promise<{ q?: string; cat?: string }>
+  searchParams: Promise<{ q?: string; cat?: string; region?: string }>
 }
 
 export default async function SearchPage({ searchParams }: Props) {
@@ -14,8 +14,9 @@ export default async function SearchPage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { q = '', cat = '' } = await searchParams
+  const { q = '', cat = '', region = '' } = await searchParams
   const category = CATEGORIES.includes(cat) && cat !== '전체' ? cat : ''
+  const regionNames = region ? region.split(',').filter(Boolean) : []
 
   let query = supabase
     .from('restaurants')
@@ -28,6 +29,13 @@ export default async function SearchPage({ searchParams }: Props) {
   }
   if (category) {
     query = query.eq('category', category)
+  }
+  // 지역 필터: 저장된 지역이 있을 때 주소 기준으로 필터링
+  if (regionNames.length > 0) {
+    const orFilter = regionNames
+      .flatMap((rn) => [`road_address.ilike.%${rn}%`, `address.ilike.%${rn}%`])
+      .join(',')
+    query = query.or(orFilter)
   }
 
   const { data: restaurants } = q || category ? await query : { data: [] }
@@ -43,13 +51,18 @@ export default async function SearchPage({ searchParams }: Props) {
         <div className="flex-1">
           <h1 className="text-base font-semibold text-[#1B4332]">검색</h1>
           {(q || category) && (
-            <p className="text-xs text-zinc-400">{restaurants?.length ?? 0}건</p>
+            <p className="text-xs text-zinc-400">
+              {regionNames.length > 0 && <span className="text-[#1B4332]">{regionNames.join(', ')} · </span>}
+              {restaurants?.length ?? 0}건
+            </p>
           )}
         </div>
       </header>
 
       {/* 검색 폼 */}
       <form action="/search" className="px-4 pt-3 md:px-8 flex flex-col gap-2">
+        {/* 지역 필터 유지 */}
+        {region && <input type="hidden" name="region" value={region} />}
         <div className="relative max-w-lg mx-auto w-full">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
           <input

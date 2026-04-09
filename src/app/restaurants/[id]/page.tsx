@@ -8,6 +8,7 @@ import DeleteRestaurantButton from '@/components/DeleteRestaurantButton'
 import FavoriteButton from '@/components/FavoriteButton'
 import ShareButton from '@/components/ShareButton'
 import BusinessHoursDisplay from '@/components/BusinessHoursDisplay'
+import BusinessHoursEditor from '@/components/BusinessHoursEditor'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -145,6 +146,16 @@ export default async function RestaurantDetailPage({ params }: Props) {
         {restaurant.business_hours && (
           <section>
             <BusinessHoursDisplay hours={restaurant.business_hours} />
+          </section>
+        )}
+
+        {/* 영업시간 등록/수정 (등록자 또는 관리자) */}
+        {user && (isAdmin || restaurant.created_by === user.id) && (
+          <section>
+            <BusinessHoursEditor
+              restaurantId={id}
+              existingHours={restaurant.business_hours ?? null}
+            />
           </section>
         )}
 

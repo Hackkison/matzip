@@ -45,7 +45,11 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      const params = new URLSearchParams({ q: searchQuery.trim() })
+      // 마지막으로 선택한 지역이 있으면 검색에 포함
+      const savedRegion = typeof window !== 'undefined' ? localStorage.getItem('matzip_region') : ''
+      if (savedRegion) params.set('region', savedRegion)
+      router.push(`/search?${params.toString()}`)
     }
   }
 
@@ -57,6 +61,10 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
   }
 
   const handleConfirm = (codes: string[], names: string[]) => {
+    // 선택한 지역을 localStorage에 저장 (검색 시 재활용)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('matzip_region', names.join(','))
+    }
     router.push(buildRestaurantsUrl(codes, names))
   }
 
