@@ -12,7 +12,7 @@ export const DEFAULT_HOURS: HoursInput = {
   thu: { open: '11:00', close: '21:00', closed: false },
   fri: { open: '11:00', close: '21:00', closed: false },
   sat: { open: '11:00', close: '21:00', closed: false },
-  sun: { open: '11:00', close: '21:00', closed: true },
+  sun: { open: '11:00', close: '21:00', closed: false },
 }
 
 // HoursInput → DB 저장 형식으로 변환

@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Heart } from 'lucide-react'
+import { Heart, Flag } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import ReviewForm from './ReviewForm'
+import ReviewReportModal from './ReviewReportModal'
 
 interface ReviewLike {
   user_id: string
@@ -61,6 +62,7 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
   const [showForm, setShowForm] = useState(false)
   const [sort, setSort] = useState<SortOption>('최신순')
   const [filter, setFilter] = useState<FilterOption>('전체')
+  const [reportingId, setReportingId] = useState<string | null>(null)
 
   const reload = async () => {
     const { data } = await supabase
@@ -208,6 +210,13 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
         <p className="text-sm text-zinc-400 text-center py-4">사진이 있는 리뷰가 없어요</p>
       )}
 
+      {reportingId && (
+        <ReviewReportModal
+          reviewId={reportingId}
+          onClose={() => setReportingId(null)}
+        />
+      )}
+
       {displayReviews.map((review) => {
         const likeCount = (review.review_likes ?? []).length
         const liked = (review.review_likes ?? []).some(l => l.user_id === currentUserId)
@@ -273,22 +282,34 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
                   </div>
                 )}
 
-                {/* 하단: 날짜 + 좋아요 */}
+                {/* 하단: 날짜 + 좋아요 + 신고 */}
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-zinc-300">
                     {new Date(review.created_at).toLocaleDateString('ko-KR')}
                   </p>
-                  <button
-                    onClick={() => toggleLike(review.id)}
-                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
-                      liked
-                        ? 'text-red-500 bg-red-50'
-                        : 'text-zinc-400 hover:text-red-400 hover:bg-red-50'
-                    }`}
-                  >
-                    <Heart size={12} fill={liked ? 'currentColor' : 'none'} />
-                    {likeCount > 0 && <span>{likeCount}</span>}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => toggleLike(review.id)}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
+                        liked
+                          ? 'text-red-500 bg-red-50'
+                          : 'text-zinc-400 hover:text-red-400 hover:bg-red-50'
+                      }`}
+                    >
+                      <Heart size={12} fill={liked ? 'currentColor' : 'none'} />
+                      {likeCount > 0 && <span>{likeCount}</span>}
+                    </button>
+                    {/* 타인 리뷰에만 신고 버튼 표시 */}
+                    {currentUserId && review.user_id !== currentUserId && !isAdmin && (
+                      <button
+                        onClick={() => setReportingId(review.id)}
+                        className="p-1.5 text-zinc-300 hover:text-orange-400 rounded transition-colors"
+                        title="삭제 요청"
+                      >
+                        <Flag size={11} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </>
             )}

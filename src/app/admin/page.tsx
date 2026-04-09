@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Star } from 'lucide-react'
+import { ChevronLeft, Star, Flag } from 'lucide-react'
 import AdminDeleteButton from '@/components/AdminDeleteButton'
+import AdminRequestActions from '@/components/AdminRequestActions'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -19,7 +20,7 @@ export default async function AdminPage() {
   // 관리자가 아니면 메인으로 이동
   if (!profile?.is_admin) redirect('/map')
 
-  const [{ data: restaurants }, { data: reviews }] = await Promise.all([
+  const [{ data: restaurants }, { data: reviews }, { data: requests }] = await Promise.all([
     supabase
       .from('restaurants')
       .select('id, name, category, road_address, address, created_at, profiles(name)')
@@ -27,6 +28,11 @@ export default async function AdminPage() {
     supabase
       .from('reviews')
       .select('id, rating, content, created_at, restaurant_id, user_id, restaurants(name), profiles(name)')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('review_delete_requests')
+      .select('id, reason, created_at, status, reviews(id, content, rating, restaurant_id, restaurants(name)), profiles(name)')
+      .eq('status', 'pending')
       .order('created_at', { ascending: false }),
   ])
 
@@ -132,6 +138,57 @@ export default async function AdminPage() {
                       apiUrl={`/api/reviews/${rv.id}`}
                       confirmMessage="이 리뷰를 삭제할까요?"
                     />
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* 리뷰 삭제 요청 */}
+        <section>
+          <h2 className="text-sm font-semibold text-zinc-800 mb-3 flex items-center gap-2">
+            <Flag size={14} className="text-orange-400" />
+            삭제 요청 ({requests?.length ?? 0})
+          </h2>
+          {!requests || requests.length === 0 ? (
+            <p className="text-sm text-zinc-400 text-center py-4">처리 대기 중인 요청이 없어요</p>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {requests.map((req) => {
+                const review = Array.isArray(req.reviews) ? req.reviews[0] : req.reviews as {
+                  id: string; content: string; rating: number; restaurant_id: string; restaurants: { name: string } | { name: string }[] | null
+                } | null
+                const requester = Array.isArray(req.profiles) ? req.profiles[0] : req.profiles as { name: string } | null
+                const restaurantName = review
+                  ? (Array.isArray(review.restaurants) ? review.restaurants[0]?.name : (review.restaurants as { name: string } | null)?.name)
+                  : null
+                return (
+                  <div key={req.id} className="flex items-start gap-3 px-3 py-3 border border-orange-100 bg-orange-50/30 rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-medium text-zinc-700">
+                          {requester?.name ?? '알 수 없음'}
+                        </span>
+                        <span className="text-xs text-zinc-400">→</span>
+                        {review && (
+                          <Link
+                            href={`/restaurants/${review.restaurant_id}`}
+                            className="text-xs font-medium text-[#1B4332] hover:underline truncate"
+                          >
+                            {restaurantName ?? '삭제된 식당'} ★{review.rating}
+                          </Link>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-500 truncate">
+                        리뷰: {review?.content ? review.content.slice(0, 40) + (review.content.length > 40 ? '…' : '') : '(내용 없음)'}
+                      </p>
+                      <p className="text-xs text-orange-600 mt-0.5">사유: {req.reason}</p>
+                      <p className="text-xs text-zinc-300 mt-0.5">
+                        {new Date(req.created_at).toLocaleDateString('ko-KR')}
+                      </p>
+                    </div>
+                    {review && <AdminRequestActions requestId={req.id} />}
                   </div>
                 )
               })}

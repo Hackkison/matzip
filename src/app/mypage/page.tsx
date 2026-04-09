@@ -26,6 +26,16 @@ export default async function MyPage() {
       .order('created_at', { ascending: false }),
   ])
 
+  // 관리자인 경우 미처리 삭제 요청 수 조회
+  let pendingRequestCount = 0
+  if (profile?.is_admin) {
+    const { count } = await supabase
+      .from('review_delete_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+    pendingRequestCount = count ?? 0
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50">
       <header className="flex items-center gap-3 bg-[#1B4332] px-4 py-4 md:px-8">
@@ -42,8 +52,13 @@ export default async function MyPage() {
             <p className="text-lg font-semibold text-zinc-800">{profile?.name ?? '닉네임 없음'}</p>
             <p className="text-xs text-zinc-400">{user.email}</p>
             {profile?.is_admin && (
-              <Link href="/admin" className="text-xs text-[#1B4332] font-medium hover:underline">
+              <Link href="/admin" className="inline-flex items-center gap-1.5 text-xs text-[#1B4332] font-medium hover:underline">
                 관리자 콘텐츠 관리 →
+                {pendingRequestCount > 0 && (
+                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                    {pendingRequestCount > 9 ? '9+' : pendingRequestCount}
+                  </span>
+                )}
               </Link>
             )}
           </div>
