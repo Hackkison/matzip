@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { revalidateRestaurantsCache } from '@/app/actions'
 import { resizeToWebP } from '@/lib/image'
-import { ChevronLeft, Search, X, ImagePlus } from 'lucide-react'
+import { ChevronLeft, Search, X, ImagePlus, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
+import BusinessHoursInput, { DEFAULT_HOURS, toBusinessHours, type HoursInput } from './BusinessHoursInput'
 
 const CATEGORIES = ['한식', '중식', '일식', '양식', '디저트', '기타']
 
@@ -72,6 +73,8 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
   const [duplicateId, setDuplicateId] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [showHours, setShowHours] = useState(false)
+  const [hoursInput, setHoursInput] = useState<HoursInput>(DEFAULT_HOURS)
 
   // 직접 입력 모드
   const [manualMode, setManualMode] = useState(false)
@@ -238,6 +241,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
           created_by: user.id,
           image_url: imageUrl,
           price_range: priceRange,
+          business_hours: showHours ? toBusinessHours(hoursInput) : null,
         })
         .select()
         .single()
@@ -267,6 +271,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
         created_by: user.id,
         image_url: imageUrl,
         price_range: priceRange,
+        business_hours: showHours ? toBusinessHours(hoursInput) : null,
       })
       .select()
       .single()
@@ -467,6 +472,28 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* 영업시간 (선택) */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowHours(v => !v)}
+                className="flex items-center justify-between w-full text-sm font-medium text-zinc-700"
+              >
+                <span>
+                  영업시간 <span className="text-zinc-400 font-normal">(선택)</span>
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={`text-zinc-400 transition-transform ${showHours ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {showHours && (
+                <div className="mt-3">
+                  <BusinessHoursInput value={hoursInput} onChange={setHoursInput} />
+                </div>
+              )}
             </div>
 
             {/* 대표 사진 (선택) */}

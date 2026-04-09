@@ -7,6 +7,7 @@ import ReviewList from '@/components/ReviewList'
 import DeleteRestaurantButton from '@/components/DeleteRestaurantButton'
 import FavoriteButton from '@/components/FavoriteButton'
 import ShareButton from '@/components/ShareButton'
+import BusinessHoursDisplay from '@/components/BusinessHoursDisplay'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -139,6 +140,13 @@ export default async function RestaurantDetailPage({ params }: Props) {
             />
           )}
         </section>
+
+        {/* 영업시간 */}
+        {restaurant.business_hours && (
+          <section>
+            <BusinessHoursDisplay hours={restaurant.business_hours} />
+          </section>
+        )}
 
         {/* 버튼 영역 */}
         <div className="flex flex-col gap-2">

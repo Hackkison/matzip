@@ -14,7 +14,7 @@ async function fetchRestaurants(regionNames: string[]) {
 
   let restaurantsQuery = supabase
     .from('restaurants')
-    .select('id, name, category, address, road_address, phone, image_url, price_range')
+    .select('id, name, category, address, road_address, phone, image_url, price_range, business_hours')
     .order('created_at', { ascending: false })
 
   if (regionNames.length > 0) {
@@ -47,6 +47,7 @@ async function fetchRestaurants(regionNames: string[]) {
     ...r,
     thumbnail_url: r.image_url ?? reviewThumbnails[r.id] ?? null,
     price_range: r.price_range ?? null,
+    business_hours: r.business_hours ?? null,
   }))
 }
 

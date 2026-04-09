@@ -4,6 +4,7 @@ import { useState } from 'react'
 import RestaurantCard from './RestaurantCard'
 import { ChevronDown } from 'lucide-react'
 import { getCategoryStyle } from '@/lib/category'
+import { isOpenNow, type BusinessHours } from '@/lib/businessHours'
 
 const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '디저트', '기타']
 
@@ -31,6 +32,7 @@ interface Restaurant {
   phone: string | null
   thumbnail_url: string | null
   price_range: number | null
+  business_hours: BusinessHours | null
 }
 
 interface Props {
@@ -41,6 +43,7 @@ interface Props {
 export default function RestaurantList({ restaurants, favoritedIds }: Props) {
   const [active, setActive] = useState('전체')
   const [priceFilter, setPriceFilter] = useState<number | null>(null)
+  const [openOnly, setOpenOnly] = useState(false)
   const [sort, setSort] = useState('latest')
   const [showSortMenu, setShowSortMenu] = useState(false)
 
@@ -49,6 +52,8 @@ export default function RestaurantList({ restaurants, favoritedIds }: Props) {
   const filtered = restaurants
     .filter((r) => active === '전체' || r.category === active)
     .filter((r) => priceFilter === null || r.price_range === priceFilter)
+    // 영업 중 필터: 영업시간 정보 없는 가게는 제외하지 않음
+    .filter((r) => !openOnly || isOpenNow(r.business_hours) !== false)
 
   const sorted = [...filtered].sort((a, b) => {
     if (sort === 'name') return a.name.localeCompare(b.name, 'ko')
@@ -121,10 +126,10 @@ export default function RestaurantList({ restaurants, favoritedIds }: Props) {
         </div>
       </div>
 
-      {/* 가격대 필터 */}
-      <div className="flex items-center gap-2 px-4 py-2 md:px-8 max-w-3xl mx-auto w-full border-b border-zinc-100">
+      {/* 가격대 필터 + 영업 중 필터 */}
+      <div className="flex items-center gap-3 px-4 py-2 md:px-8 max-w-3xl mx-auto w-full border-b border-zinc-100">
         <span className="text-xs text-zinc-400 shrink-0">가격대</span>
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-none flex-1">
           {PRICE_FILTERS.map((p) => (
             <button
               key={String(p.value)}
@@ -139,6 +144,17 @@ export default function RestaurantList({ restaurants, favoritedIds }: Props) {
             </button>
           ))}
         </div>
+        <button
+          onClick={() => setOpenOnly(v => !v)}
+          className={`shrink-0 flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+            openOnly
+              ? 'bg-green-600 text-white border-transparent'
+              : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300'
+          }`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${openOnly ? 'bg-white' : 'bg-green-400'}`} />
+          영업 중
+        </button>
       </div>
 
       {/* 목록 */}
