@@ -44,16 +44,13 @@ export async function PATCH(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
-  const [{ data: restaurant }, { data: profile }] = await Promise.all([
-    supabase.from('restaurants').select('created_by').eq('id', id).single(),
-    supabase.from('profiles').select('is_admin').eq('id', user.id).single(),
-  ])
+  const { data: restaurant } = await supabase
+    .from('restaurants')
+    .select('id')
+    .eq('id', id)
+    .single()
 
   if (!restaurant) return NextResponse.json({ error: '식당을 찾을 수 없습니다' }, { status: 404 })
-
-  const isOwner = restaurant.created_by === user.id
-  const isAdmin = profile?.is_admin === true
-  if (!isOwner && !isAdmin) return NextResponse.json({ error: '권한 없음' }, { status: 403 })
 
   const { error } = await supabase
     .from('restaurants')

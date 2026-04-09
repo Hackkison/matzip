@@ -149,8 +149,8 @@ export default async function RestaurantDetailPage({ params }: Props) {
           </section>
         )}
 
-        {/* 영업시간 등록/수정 (등록자 또는 관리자) */}
-        {user && (isAdmin || restaurant.created_by === user.id) && (
+        {/* 영업시간 등록/수정 (로그인한 모든 사용자) */}
+        {user && (
           <section>
             <BusinessHoursEditor
               restaurantId={id}
