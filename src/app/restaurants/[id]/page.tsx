@@ -6,9 +6,51 @@ import { ChevronLeft, MapPin, Phone, ExternalLink } from 'lucide-react'
 import ReviewList from '@/components/ReviewList'
 import DeleteRestaurantButton from '@/components/DeleteRestaurantButton'
 import FavoriteButton from '@/components/FavoriteButton'
+import type { Metadata } from 'next'
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://matzip.vercel.app'
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: restaurant } = await supabase
+    .from('restaurants')
+    .select('name, category, road_address, address, image_url')
+    .eq('id', id)
+    .single()
+
+  if (!restaurant) return { title: '맛집 지도' }
+
+  const address = restaurant.road_address || restaurant.address
+  const title = `${restaurant.name} — 맛집 지도`
+  const description = `${address} · ${restaurant.category}`
+  const url = `${SITE_URL}/restaurants/${id}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: '맛집 지도',
+      ...(restaurant.image_url && {
+        images: [{ url: restaurant.image_url, width: 1200, height: 630, alt: restaurant.name }],
+      }),
+      type: 'website',
+      locale: 'ko_KR',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(restaurant.image_url && { images: [restaurant.image_url] }),
+    },
+  }
 }
 
 export default async function RestaurantDetailPage({ params }: Props) {
@@ -83,7 +125,7 @@ export default async function RestaurantDetailPage({ params }: Props) {
         <section className="flex flex-col gap-3">
           <InfoRow icon={<MapPin size={15} />} label="주소" value={address} />
           {restaurant.phone && (
-            <InfoRow icon={<Phone size={15} />} label="전화" value={restaurant.phone} />
+            <InfoRow icon={<Phone size={15} />} label="전화" value={restaurant.phone} href={`tel:${restaurant.phone.replace(/[^0-9]/g, '')}`} />
           )}
         </section>
 
@@ -118,13 +160,17 @@ export default async function RestaurantDetailPage({ params }: Props) {
   )
 }
 
-function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function InfoRow({ icon, label, value, href }: { icon: React.ReactNode; label: string; value: string; href?: string }) {
   return (
     <div className="flex items-start gap-3 py-2">
       <span className="mt-0.5 text-zinc-400 shrink-0">{icon}</span>
       <div>
         <p className="text-xs text-zinc-400 mb-0.5">{label}</p>
-        <p className="text-sm text-zinc-700">{value}</p>
+        {href ? (
+          <a href={href} className="text-sm text-[#1B4332] underline underline-offset-2">{value}</a>
+        ) : (
+          <p className="text-sm text-zinc-700">{value}</p>
+        )}
       </div>
     </div>
   )

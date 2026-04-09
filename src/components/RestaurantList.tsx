@@ -7,6 +7,14 @@ import { getCategoryStyle } from '@/lib/category'
 
 const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '디저트', '기타']
 
+const PRICE_FILTERS: { value: number | null; label: string }[] = [
+  { value: null, label: '전체' },
+  { value: 1, label: '₩' },
+  { value: 2, label: '₩₩' },
+  { value: 3, label: '₩₩₩' },
+  { value: 4, label: '₩₩₩₩' },
+]
+
 const SORT_OPTIONS = [
   { value: 'latest', label: '최신순' },
   { value: 'name', label: '이름순' },
@@ -32,12 +40,15 @@ interface Props {
 
 export default function RestaurantList({ restaurants, favoritedIds }: Props) {
   const [active, setActive] = useState('전체')
+  const [priceFilter, setPriceFilter] = useState<number | null>(null)
   const [sort, setSort] = useState('latest')
   const [showSortMenu, setShowSortMenu] = useState(false)
 
   const currentSort = SORT_OPTIONS.find(s => s.value === sort)!
 
-  const filtered = active === '전체' ? restaurants : restaurants.filter((r) => r.category === active)
+  const filtered = restaurants
+    .filter((r) => active === '전체' || r.category === active)
+    .filter((r) => priceFilter === null || r.price_range === priceFilter)
 
   const sorted = [...filtered].sort((a, b) => {
     if (sort === 'name') return a.name.localeCompare(b.name, 'ko')
@@ -107,6 +118,26 @@ export default function RestaurantList({ restaurants, favoritedIds }: Props) {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* 가격대 필터 */}
+      <div className="flex items-center gap-2 px-4 py-2 md:px-8 max-w-3xl mx-auto w-full border-b border-zinc-100">
+        <span className="text-xs text-zinc-400 shrink-0">가격대</span>
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+          {PRICE_FILTERS.map((p) => (
+            <button
+              key={String(p.value)}
+              onClick={() => setPriceFilter(p.value)}
+              className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                priceFilter === p.value
+                  ? 'bg-[#1B4332] text-white border-transparent'
+                  : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
       </div>
 

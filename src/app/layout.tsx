@@ -18,6 +18,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "맛집 지도",
   description: "맛집을 기록하고 공유하는 서비스",
+  openGraph: {
+    title: "맛집 지도",
+    description: "맛집을 기록하고 공유하는 서비스",
+    siteName: "맛집 지도",
+    locale: "ko_KR",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
