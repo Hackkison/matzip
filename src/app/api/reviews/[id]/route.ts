@@ -12,6 +12,9 @@ export async function DELETE(
   if (rl) return rl
 
   const { id } = await params
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return NextResponse.json({ error: '잘못된 요청입니다' }, { status: 400 })
+  }
 
   const cookieStore = await cookies()
   const supabase = createServerClient(

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkKakaoRateLimit } from '@/lib/ratelimit'
 
 export async function GET(request: NextRequest) {
+  const rl = await checkKakaoRateLimit(request)
+  if (rl) return rl
+
   const query = request.nextUrl.searchParams.get('query')
   if (!query || query.length < 2) return NextResponse.json({ documents: [] })
 

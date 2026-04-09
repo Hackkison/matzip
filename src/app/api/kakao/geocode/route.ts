@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkKakaoRateLimit } from '@/lib/ratelimit'
 
 export async function GET(request: NextRequest) {
+  const rl = await checkKakaoRateLimit(request)
+  if (rl) return rl
+
   const address = request.nextUrl.searchParams.get('address')
   if (!address) return NextResponse.json({ lat: 0, lng: 0 })
 
