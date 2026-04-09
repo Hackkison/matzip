@@ -136,3 +136,39 @@
 - [ ] HR 앱 인증 이관 검토 (JWT 공유, CORS, SameSite 정책)
 - [x] Vercel 프로덕션 배포 (https://matzip-two.vercel.app)
 - [x] 운영자 콘텐츠 관리 기능 (/admin — 전체 식당·리뷰 목록 + 삭제, 관리자만 접근)
+
+---
+
+### Phase 12 — 보안 강화
+- [x] HTTP 보안 헤더 (CSP, X-Frame-Options, X-Content-Type-Options 등)
+- [x] CSRF 방어 — Origin 헤더 검증 (proxy.ts)
+- [x] Rate Limiting — Upstash Redis (일반 20req/10s, Kakao API 30req/60s)
+- [x] RLS 정책 점검 및 강화 (restaurants / reviews / profiles / favorites)
+- [x] UUID 포맷 검증 — 동적 라우트 params 전체 적용
+- [x] Mass Assignment 방지 — req.body 직접 전달 차단, 필드 명시
+- [x] middleware.ts → proxy.ts 마이그레이션 (Next.js 16)
+
+---
+
+### Phase 13 — 사용자 경험 고도화 (경쟁사 분석 기반)
+- [x] OG 메타태그 — 맛집 상세 페이지 동적 og:title / og:description / og:image / twitter card
+- [x] 공유하기 버튼 — Web Share API (모바일) + 클립보드 복사 (데스크탑)
+- [x] 즐겨찾기(찜) 기능 — 식당 상세에서 토글, 마이페이지에서 목록 조회
+- [x] 리뷰 좋아요 — 낙관적 업데이트, 좋아요 수 표시
+- [x] 리뷰 사진 첨부 — 최대 5장, WebP 리사이즈
+- [x] 0.5 단위 별점 (1.0 ~ 5.0)
+- [x] 가격대 필터 (₩~₩₩₩₩) + 영업 중 필터
+- [x] 영업시간 등록 / 표시 (등록 시 요일별 설정, 상세 페이지에서 오늘 영업 여부 표시)
+- [x] 영업시간 수정 — 상세 페이지에서 로그인 사용자 누구나 수정 가능
+- [x] 전화번호 tel: 링크 연결 (모바일 바로 전화)
+- [x] 리뷰 삭제 요청 — 타인 리뷰 신고 → 관리자 승인/반려
+- [x] 관리자 BottomNav 뱃지 — 미처리 삭제 요청 수 실시간 표시
+- [x] 검색 지역 필터 — 마지막 선택 지역 localStorage 저장 후 검색 시 자동 적용
+- [x] 현재 위치 기반 주변 맛집 (/restaurants/nearby — Haversine 거리 계산, 반경 1/3/5/10km 필터)
+
+---
+
+### Phase 14 — 남은 기능 (예정)
+- [ ] 평점·리뷰수 정렬 — 맛집 목록에서 별점 높은순 / 리뷰 많은순 정렬 옵션 추가
+- [ ] 메뉴 등록·표시 — 식당별 메뉴 이름·가격 CRUD, 상세 페이지에 메뉴판 섹션
+- [ ] 알림 시스템 — 내 리뷰에 좋아요·삭제 요청 승인 시 인앱 알림 (Supabase Realtime)
