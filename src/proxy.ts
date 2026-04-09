@@ -65,6 +65,7 @@ export async function proxy(request: NextRequest) {
   const protectedPrefixes = [
     '/map',
     '/restaurants/register',
+    '/restaurants/nearby',
     '/favorites',
     '/mypage',
     '/profile',

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search, Heart } from 'lucide-react'
+import { Search, Heart, Navigation } from 'lucide-react'
 import { getCategoryStyle } from '@/lib/category'
 
 const KoreaMap = dynamic(() => import('@/components/KoreaMap'), { ssr: false })
@@ -87,20 +87,31 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
             <span className="text-xs font-semibold text-emerald-100">{restaurantCount}개 맛집</span>
           </div>
         </div>
-        <form onSubmit={handleSearch}>
-          <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3.5 py-2.5">
-            <Search size={15} className="text-white/50 shrink-0" />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="맛집 이름, 지역으로 검색"
-              inputMode="search"
-              autoComplete="off"
-              className="flex-1 bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
-            />
-          </div>
-        </form>
+        <div className="flex gap-2">
+          <form onSubmit={handleSearch} className="flex-1">
+            <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3.5 py-2.5">
+              <Search size={15} className="text-white/50 shrink-0" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="맛집 이름, 지역으로 검색"
+                inputMode="search"
+                autoComplete="off"
+                className="flex-1 bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
+              />
+            </div>
+          </form>
+          {/* 주변 맛집 바로가기 */}
+          <Link
+            href="/restaurants/nearby"
+            className="flex items-center gap-1.5 bg-white/15 border border-white/20 rounded-xl px-3 py-2.5 text-white/80 hover:bg-white/25 transition-colors shrink-0"
+            title="주변 맛집"
+          >
+            <Navigation size={15} />
+            <span className="text-xs font-medium">주변</span>
+          </Link>
+        </div>
       </header>
 
       {/* B: 카테고리 바로가기 칩 */}
