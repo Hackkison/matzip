@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Heart, Flag } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import ReviewForm from './ReviewForm'
@@ -57,6 +58,7 @@ type FilterOption = '전체' | '사진있는리뷰'
 
 export default function ReviewList({ restaurantId, initialReviews, currentUserId, isAdmin }: Props) {
   const supabase = createClient()
+  const router = useRouter()
   const [reviews, setReviews] = useState(initialReviews)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -184,12 +186,21 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
 
       {/* 리뷰 작성 버튼 (본인 리뷰 없을 때만) */}
       {!myReview && !showForm && (
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-full py-2.5 border border-dashed border-zinc-300 rounded-lg text-sm text-zinc-500 hover:border-[#1B4332] hover:text-[#1B4332] transition-colors"
-        >
-          + 리뷰 작성
-        </button>
+        currentUserId ? (
+          <button
+            onClick={() => setShowForm(true)}
+            className="w-full py-2.5 border border-dashed border-zinc-300 rounded-lg text-sm text-zinc-500 hover:border-[#1B4332] hover:text-[#1B4332] transition-colors"
+          >
+            + 리뷰 작성
+          </button>
+        ) : (
+          <button
+            onClick={() => router.push('/login')}
+            className="w-full py-2.5 border border-dashed border-zinc-300 rounded-lg text-sm text-zinc-500 hover:border-[#1B4332] hover:text-[#1B4332] transition-colors"
+          >
+            + 로그인하고 리뷰 쓰기
+          </button>
+        )
       )}
 
       {showForm && (

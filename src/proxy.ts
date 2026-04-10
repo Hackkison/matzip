@@ -60,20 +60,15 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // 보호된 라우트: 로그인 필요
-  // /restaurants/[id]는 OG 크롤러 접근을 위해 공개 허용 (맛집 목록·등록만 보호)
+  // 보호된 라우트: 로그인 필요 (조회는 모두 공개, 입력 액션만 보호)
   const protectedPrefixes = [
-    '/map',
     '/restaurants/register',
-    '/restaurants/nearby',
     '/favorites',
     '/mypage',
     '/profile',
     '/admin',
   ]
-  const isProtected =
-    protectedPrefixes.some((p) => pathname.startsWith(p)) ||
-    pathname === '/restaurants'
+  const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p))
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone()

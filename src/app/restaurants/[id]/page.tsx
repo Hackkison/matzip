@@ -98,7 +98,7 @@ export default async function RestaurantDetailPage({ params }: Props) {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <header className="flex items-center gap-3 border-b border-zinc-100 px-4 py-4 md:px-8">
-        <Link href={user ? '/restaurants' : '/'} className="text-zinc-400 hover:text-zinc-600">
+        <Link href="/restaurants" className="text-zinc-400 hover:text-zinc-600">
           <ChevronLeft size={20} />
         </Link>
         <div className="flex-1 min-w-0">

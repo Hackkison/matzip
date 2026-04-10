@@ -286,7 +286,7 @@ export default function KakaoMapView() {
         </div>
       )}
 
-      <div ref={mapRef} className="flex-1 w-full" />
+      <div ref={mapRef} className="flex-1 w-full" style={{ touchAction: 'none' }} />
 
       {/* 하단 목록 (최대 5개 미리보기) */}
       {places.length > 0 && (
