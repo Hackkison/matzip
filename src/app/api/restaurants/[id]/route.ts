@@ -33,7 +33,7 @@ export async function PATCH(
     return NextResponse.json({ error: '잘못된 요청입니다' }, { status: 400 })
   }
 
-  let body: { business_hours: unknown }
+  let body: { business_hours?: unknown; image_url?: string }
   try {
     body = await request.json()
   } catch {
@@ -52,6 +52,24 @@ export async function PATCH(
 
   if (!restaurant) return NextResponse.json({ error: '식당을 찾을 수 없습니다' }, { status: 404 })
 
+  // 대표 사진 변경 — 관리자 전용
+  if ('image_url' in body) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+    if (!profile?.is_admin) return NextResponse.json({ error: '권한 없음' }, { status: 403 })
+
+    const { error } = await supabase
+      .from('restaurants')
+      .update({ image_url: body.image_url })
+      .eq('id', id)
+    if (error) return NextResponse.json({ error: '업데이트 실패' }, { status: 500 })
+    return NextResponse.json({ success: true })
+  }
+
+  // 영업시간 업데이트 — 로그인 사용자 누구나
   const { error } = await supabase
     .from('restaurants')
     .update({ business_hours: body.business_hours })

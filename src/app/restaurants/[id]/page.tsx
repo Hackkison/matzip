@@ -9,6 +9,7 @@ import FavoriteButton from '@/components/FavoriteButton'
 import ShareButton from '@/components/ShareButton'
 import BusinessHoursDisplay from '@/components/BusinessHoursDisplay'
 import BusinessHoursEditor from '@/components/BusinessHoursEditor'
+import AdminPhotoUpload from '@/components/AdminPhotoUpload'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -193,8 +194,13 @@ export default async function RestaurantDetailPage({ params }: Props) {
           />
         </section>
 
-        {/* 삭제 (관리자) */}
-        {isAdmin && <DeleteRestaurantButton restaurantId={id} />}
+        {/* 관리자 전용 */}
+        {isAdmin && (
+          <div className="flex flex-col gap-2">
+            <AdminPhotoUpload restaurantId={id} />
+            <DeleteRestaurantButton restaurantId={id} />
+          </div>
+        )}
       </main>
     </div>
   )
