@@ -10,6 +10,7 @@ import ShareButton from '@/components/ShareButton'
 import BusinessHoursDisplay from '@/components/BusinessHoursDisplay'
 import BusinessHoursEditor from '@/components/BusinessHoursEditor'
 import AdminPhotoUpload from '@/components/AdminPhotoUpload'
+import AdminPhotoSelect from '@/components/AdminPhotoSelect'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -86,6 +87,11 @@ export default async function RestaurantDetailPage({ params }: Props) {
 
   const isAdmin = (profile as { is_admin?: boolean } | null)?.is_admin === true
   const isFavorited = !!favorite
+
+  // 리뷰 사진 전체 수집 (관리자 대표 사진 선택용)
+  const allReviewPhotos = (reviews ?? [])
+    .flatMap((r) => (r.image_urls as string[] | null) ?? [])
+    .filter(Boolean)
 
   const address = restaurant.road_address || restaurant.address
   const kakaoMapUrl = `https://map.kakao.com/link/map/${encodeURIComponent(restaurant.name)},${restaurant.lat},${restaurant.lng}`
@@ -197,6 +203,11 @@ export default async function RestaurantDetailPage({ params }: Props) {
         {/* 관리자 전용 */}
         {isAdmin && (
           <div className="flex flex-col gap-2">
+            <AdminPhotoSelect
+              restaurantId={id}
+              reviewPhotos={allReviewPhotos}
+              currentImageUrl={restaurant.image_url ?? null}
+            />
             <AdminPhotoUpload restaurantId={id} />
             <DeleteRestaurantButton restaurantId={id} />
           </div>
