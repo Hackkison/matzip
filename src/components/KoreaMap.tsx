@@ -114,11 +114,14 @@ export default function KoreaMap({ onSelect }: Props) {
         const newTx = svgMidX - ratio * (svgMidX - startTransform.tx)
         const newTy = svgMidY - ratio * (svgMidY - startTransform.ty)
 
-        const next = { scale: newScale, tx: newTx, ty: newTy }
+        // scale=1이면 항상 중앙 고정 (부동소수점 오차 방지)
+        const next = newScale <= 1
+          ? { scale: 1, tx: 0, ty: 0 }
+          : { scale: newScale, tx: newTx, ty: newTy }
         stateRef.current.transform = next
         setTransform(next)
-      } else if (e.touches.length === 1 && startTouches.length >= 1 && startTransform.scale > 1) {
-        // 줌된 상태에서 한 손가락 패닝
+      } else if (e.touches.length === 1 && startTouches.length >= 1 && startTransform.scale > 1.01) {
+        // 줌된 상태에서만 한 손가락 패닝 허용 (1.01 임계값으로 부동소수점 오차 흡수)
         const dx = (e.touches[0].clientX - startTouches[0].x) / rect.width * WIDTH
         const dy = (e.touches[0].clientY - startTouches[0].y) / rect.height * HEIGHT
         const next = { scale: startTransform.scale, tx: startTransform.tx + dx, ty: startTransform.ty + dy }
