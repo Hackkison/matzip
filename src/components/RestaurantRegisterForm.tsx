@@ -12,10 +12,10 @@ import BusinessHoursInput, { DEFAULT_HOURS, toBusinessHours, type HoursInput } f
 const CATEGORIES = ['한식', '중식', '일식', '양식', '디저트', '기타']
 
 const PRICE_RANGES = [
-  { value: 1, label: '₩', desc: '~1만원' },
-  { value: 2, label: '₩₩', desc: '1~2만원' },
-  { value: 3, label: '₩₩₩', desc: '2~3만원' },
-  { value: 4, label: '₩₩₩₩', desc: '3만원~' },
+  { value: 1, label: '~1만원' },
+  { value: 2, label: '1~2만원' },
+  { value: 3, label: '2~4만원' },
+  { value: 4, label: '5만원~' },
 ]
 
 function mapCategory(kakaoCategory: string): string {
@@ -467,8 +467,7 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
                         : 'bg-white text-zinc-600 border-zinc-300 hover:border-[#1B4332]'
                     }`}
                   >
-                    <span className="font-medium">{p.label}</span>
-                    <span className="text-[10px] opacity-70">{p.desc}</span>
+                    <span className="font-medium text-center leading-tight">{p.label}</span>
                   </button>
                 ))}
               </div>

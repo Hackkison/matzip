@@ -5,7 +5,7 @@ import { ChevronLeft, MapPin, Star } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 
 
-const PRICE_LABEL: Record<number, string> = { 1: '₩', 2: '₩₩', 3: '₩₩₩', 4: '₩₩₩₩' }
+const PRICE_LABEL: Record<number, string> = { 1: '~1만원', 2: '1~2만원', 3: '2~4만원', 4: '5만원~' }
 
 interface Props {
   params: Promise<{ id: string }>

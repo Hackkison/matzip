@@ -10,10 +10,10 @@ const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '디저트
 
 const PRICE_FILTERS: { value: number | null; label: string }[] = [
   { value: null, label: '전체' },
-  { value: 1, label: '₩' },
-  { value: 2, label: '₩₩' },
-  { value: 3, label: '₩₩₩' },
-  { value: 4, label: '₩₩₩₩' },
+  { value: 1, label: '~1만원' },
+  { value: 2, label: '1~2만원' },
+  { value: 3, label: '2~4만원' },
+  { value: 4, label: '5만원~' },
 ]
 
 const SORT_OPTIONS = [

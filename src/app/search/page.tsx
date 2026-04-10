@@ -40,7 +40,7 @@ export default async function SearchPage({ searchParams }: Props) {
 
   const { data: restaurants } = q || category ? await query : { data: [] }
 
-  const PRICE_LABEL: Record<number, string> = { 1: '₩', 2: '₩₩', 3: '₩₩₩', 4: '₩₩₩₩' }
+  const PRICE_LABEL: Record<number, string> = { 1: '~1만원', 2: '1~2만원', 3: '2~4만원', 4: '5만원~' }
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
