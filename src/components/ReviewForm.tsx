@@ -9,7 +9,7 @@ const MAX_IMAGES = 5
 
 interface Props {
   restaurantId: string
-  existing?: { id: string; rating: number; content: string }
+  existing?: { id: string; rating: number; content: string; image_urls?: string[] | null }
   onDone: () => void
   onCancel?: () => void
 }
@@ -38,26 +38,37 @@ export default function ReviewForm({ restaurantId, existing, onDone, onCancel }:
   const [hover, setHover] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [imageFiles, setImageFiles] = useState<File[]>([])
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  // 기존 이미지 URL (수정 시 유지할 것들)
+  const [keptUrls, setKeptUrls] = useState<string[]>(existing?.image_urls ?? [])
+  // 새로 추가할 이미지
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [newPreviews, setNewPreviews] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const totalImages = keptUrls.length + newFiles.length
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
 
-    const remaining = MAX_IMAGES - imageFiles.length
+    const remaining = MAX_IMAGES - totalImages
     const toAdd = files.slice(0, remaining)
 
-    setImageFiles(prev => [...prev, ...toAdd])
-    setImagePreviews(prev => [...prev, ...toAdd.map(f => URL.createObjectURL(f))])
+    setNewFiles(prev => [...prev, ...toAdd])
+    setNewPreviews(prev => [...prev, ...toAdd.map(f => URL.createObjectURL(f))])
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const removeImage = (idx: number) => {
-    URL.revokeObjectURL(imagePreviews[idx])
-    setImageFiles(prev => prev.filter((_, i) => i !== idx))
-    setImagePreviews(prev => prev.filter((_, i) => i !== idx))
+  // 기존 이미지 제거
+  const removeKept = (idx: number) => {
+    setKeptUrls(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  // 새 이미지 제거
+  const removeNew = (idx: number) => {
+    URL.revokeObjectURL(newPreviews[idx])
+    setNewFiles(prev => prev.filter((_, i) => i !== idx))
+    setNewPreviews(prev => prev.filter((_, i) => i !== idx))
   }
 
   const handleSubmit = async () => {
@@ -70,9 +81,9 @@ export default function ReviewForm({ restaurantId, existing, onDone, onCancel }:
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // 이미지 업로드
-    const imageUrls: string[] = []
-    for (const file of imageFiles) {
+    // 새 이미지 업로드
+    const uploadedUrls: string[] = []
+    for (const file of newFiles) {
       try {
         const blob = await resizeToWebP(file)
         const path = `${restaurantId}/${user.id}_${Date.now()}.webp`
@@ -81,7 +92,7 @@ export default function ReviewForm({ restaurantId, existing, onDone, onCancel }:
           .upload(path, blob, { contentType: 'image/webp', upsert: false })
         if (uploadError) throw uploadError
         const { data: urlData } = supabase.storage.from('review-images').getPublicUrl(path)
-        imageUrls.push(urlData.publicUrl)
+        uploadedUrls.push(urlData.publicUrl)
       } catch {
         setError('사진 업로드에 실패했습니다.')
         setSubmitting(false)
@@ -89,10 +100,12 @@ export default function ReviewForm({ restaurantId, existing, onDone, onCancel }:
       }
     }
 
+    const finalImageUrls = [...keptUrls, ...uploadedUrls]
+
     if (existing) {
       const { error } = await supabase
         .from('reviews')
-        .update({ rating, content: content.trim(), updated_at: new Date().toISOString() })
+        .update({ rating, content: content.trim(), image_urls: finalImageUrls, updated_at: new Date().toISOString() })
         .eq('id', existing.id)
       if (error) { setError('수정 중 오류가 발생했습니다'); setSubmitting(false); return }
     } else {
@@ -103,7 +116,7 @@ export default function ReviewForm({ restaurantId, existing, onDone, onCancel }:
           user_id: user.id,
           rating,
           content: content.trim(),
-          image_urls: imageUrls,
+          image_urls: finalImageUrls,
         })
       if (error) { setError('등록 중 오류가 발생했습니다'); setSubmitting(false); return }
     }
@@ -156,43 +169,53 @@ export default function ReviewForm({ restaurantId, existing, onDone, onCancel }:
         className="w-full px-3 py-2.5 border border-zinc-200 rounded-lg text-sm resize-none focus:outline-none focus:border-[#1B4332] focus:ring-1 focus:ring-[#1B4332]"
       />
 
-      {/* 사진 첨부 (새 리뷰만) */}
-      {!existing && (
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap gap-2">
-            {imagePreviews.map((src, idx) => (
-              <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden bg-zinc-100">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt={`사진 ${idx + 1}`} className="w-full h-full object-cover" />
-                <button
-                  onClick={() => removeImage(idx)}
-                  className="absolute top-0.5 right-0.5 p-0.5 bg-black/50 rounded-full text-white hover:bg-black/70"
-                >
-                  <X size={10} />
-                </button>
-              </div>
-            ))}
-            {imagePreviews.length < MAX_IMAGES && (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-20 h-20 flex flex-col items-center justify-center gap-1 border border-dashed border-zinc-300 rounded-lg text-zinc-400 hover:border-[#1B4332] hover:text-[#1B4332] transition-colors"
-              >
-                <ImagePlus size={16} />
-                <span className="text-xs">{imagePreviews.length}/{MAX_IMAGES}</span>
-              </button>
-            )}
+      {/* 사진 첨부 (등록/수정 공통) */}
+      <div className="flex flex-wrap gap-2">
+        {/* 기존 이미지 (수정 시) */}
+        {keptUrls.map((url, idx) => (
+          <div key={`kept-${idx}`} className="relative w-20 h-20 rounded-lg overflow-hidden bg-zinc-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt={`기존 사진 ${idx + 1}`} className="w-full h-full object-cover" />
+            <button
+              onClick={() => removeKept(idx)}
+              className="absolute top-0.5 right-0.5 p-0.5 bg-black/50 rounded-full text-white hover:bg-black/70"
+            >
+              <X size={10} />
+            </button>
           </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={handleImageChange}
-          />
-        </div>
-      )}
+        ))}
+        {/* 새로 추가한 이미지 */}
+        {newPreviews.map((src, idx) => (
+          <div key={`new-${idx}`} className="relative w-20 h-20 rounded-lg overflow-hidden bg-zinc-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={src} alt={`새 사진 ${idx + 1}`} className="w-full h-full object-cover" />
+            <button
+              onClick={() => removeNew(idx)}
+              className="absolute top-0.5 right-0.5 p-0.5 bg-black/50 rounded-full text-white hover:bg-black/70"
+            >
+              <X size={10} />
+            </button>
+          </div>
+        ))}
+        {totalImages < MAX_IMAGES && (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-20 h-20 flex flex-col items-center justify-center gap-1 border border-dashed border-zinc-300 rounded-lg text-zinc-400 hover:border-[#1B4332] hover:text-[#1B4332] transition-colors"
+          >
+            <ImagePlus size={16} />
+            <span className="text-xs">{totalImages}/{MAX_IMAGES}</span>
+          </button>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={handleImageChange}
+        />
+      </div>
 
       {error && <p className="text-xs text-red-500">{error}</p>}
 

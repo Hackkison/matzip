@@ -238,7 +238,7 @@ export default function ReviewList({ restaurantId, initialReviews, currentUserId
               <div className="p-3 border border-zinc-200 rounded-xl">
                 <ReviewForm
                   restaurantId={restaurantId}
-                  existing={{ id: review.id, rating: review.rating, content: review.content }}
+                  existing={{ id: review.id, rating: review.rating, content: review.content, image_urls: review.image_urls }}
                   onDone={reload}
                   onCancel={() => setEditingId(null)}
                 />
