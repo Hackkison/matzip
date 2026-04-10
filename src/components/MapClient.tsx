@@ -151,7 +151,7 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
       </div>
 
       {/* 지도 — 남은 공간 대부분 차지 */}
-      <div className="flex-1 min-h-0 flex items-center justify-center bg-white px-4 py-3">
+      <div className="flex-1 min-h-0 flex items-center justify-center bg-white px-4 py-3 overflow-hidden">
         <KoreaMap onSelect={(code, name) => setModal({ code, name })} />
       </div>
 
