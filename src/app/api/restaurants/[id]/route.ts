@@ -52,6 +52,12 @@ export async function PATCH(
 
   if (!restaurant) return NextResponse.json({ error: '식당을 찾을 수 없습니다' }, { status: 404 })
 
+  // 서비스 롤 클라이언트 — RLS 우회로 확실한 업데이트 보장
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   // 대표 사진 변경 — 관리자 전용
   if ('image_url' in body) {
     const { data: profile } = await supabase
@@ -61,7 +67,7 @@ export async function PATCH(
       .single()
     if (!profile?.is_admin) return NextResponse.json({ error: '권한 없음' }, { status: 403 })
 
-    const { error } = await supabase
+    const { error } = await admin
       .from('restaurants')
       .update({ image_url: body.image_url })
       .eq('id', id)
@@ -70,7 +76,7 @@ export async function PATCH(
   }
 
   // 영업시간 업데이트 — 로그인 사용자 누구나
-  const { error } = await supabase
+  const { error } = await admin
     .from('restaurants')
     .update({ business_hours: body.business_hours })
     .eq('id', id)
