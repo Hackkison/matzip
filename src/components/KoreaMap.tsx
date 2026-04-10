@@ -204,7 +204,7 @@ export default function KoreaMap({ onSelect }: Props) {
               y={p.centroidY + dy}
               textAnchor="middle"
               dominantBaseline="middle"
-              fontSize={11 / scale}
+              fontSize={11}
               fontWeight="600"
               fill={hovered === p.code ? 'white' : '#444'}
               className="pointer-events-none"
