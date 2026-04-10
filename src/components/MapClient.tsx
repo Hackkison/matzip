@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search, Heart, Navigation } from 'lucide-react'
+import { Search, Heart, Navigation, LogIn } from 'lucide-react'
 import { getCategoryStyle } from '@/lib/category'
 
 const KoreaMap = dynamic(() => import('@/components/KoreaMap'), { ssr: false })
@@ -34,9 +34,10 @@ interface Props {
   nickname: string | null
   restaurantCount: number
   recentRestaurants: RecentRestaurant[]
+  isLoggedIn: boolean
 }
 
-export default function MapClient({ nickname, restaurantCount, recentRestaurants }: Props) {
+export default function MapClient({ nickname, restaurantCount, recentRestaurants, isLoggedIn }: Props) {
   const router = useRouter()
   const [modal, setModal] = useState<{ code: string; name: string } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -82,6 +83,15 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
             안녕하세요 👋{' '}
             <span className="text-emerald-300">{nickname ?? '맛집러'}님</span>
           </p>
+          {!isLoggedIn && (
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 border border-white/30 rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+            >
+              <LogIn size={12} />
+              로그인
+            </Link>
+          )}
           <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
             <span className="text-xs font-semibold text-emerald-100">{restaurantCount}개 맛집</span>

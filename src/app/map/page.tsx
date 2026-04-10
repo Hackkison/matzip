@@ -56,6 +56,7 @@ export default async function MapPage() {
       nickname={(profile as { name?: string } | null)?.name ?? null}
       restaurantCount={restaurantCount ?? 0}
       recentRestaurants={recentRestaurants}
+      isLoggedIn={!!user}
     />
   )
 }
