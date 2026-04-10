@@ -5,7 +5,7 @@ export const DAY_LABELS: Record<DayKey, string> = {
   mon: '월', tue: '화', wed: '수', thu: '목', fri: '금', sat: '토', sun: '일',
 }
 
-export type DayHours = { open: string; close: string } | null
+export type DayHours = { open: string; close: string; breakStart?: string; breakEnd?: string } | null
 export type BusinessHours = Record<DayKey, DayHours>
 
 // JS Date.getDay(): 0=일, 1=월 ... 6=토
@@ -25,7 +25,13 @@ export function isOpenNow(hours: BusinessHours | null | undefined): boolean | nu
   if (!dayHours) return false // 휴무
 
   const nowMins = now.getHours() * 60 + now.getMinutes()
-  return nowMins >= toMinutes(dayHours.open) && nowMins < toMinutes(dayHours.close)
+  const isOpen = nowMins >= toMinutes(dayHours.open) && nowMins < toMinutes(dayHours.close)
+  if (!isOpen) return false
+  // 브레이크 타임 중이면 영업 종료로 처리
+  if (dayHours.breakStart && dayHours.breakEnd) {
+    if (nowMins >= toMinutes(dayHours.breakStart) && nowMins < toMinutes(dayHours.breakEnd)) return false
+  }
+  return true
 }
 
 // 오늘 영업시간 반환

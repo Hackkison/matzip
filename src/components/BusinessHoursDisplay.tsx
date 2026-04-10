@@ -26,7 +26,7 @@ export default function BusinessHoursDisplay({ hours }: Props) {
         </span>
         <span className="text-xs text-zinc-400">
           {todayHours
-            ? `오늘 ${todayHours.open} ~ ${todayHours.close}`
+            ? `오늘 ${todayHours.open} ~ ${todayHours.close}${todayHours.breakStart ? ` (브레이크 ${todayHours.breakStart}~${todayHours.breakEnd})` : ''}`
             : '오늘 휴무'}
         </span>
       </div>
@@ -44,7 +44,12 @@ export default function BusinessHoursDisplay({ hours }: Props) {
               }`}
             >
               <span className="w-4 shrink-0">{DAY_LABELS[day]}</span>
-              <span>{h ? `${h.open} ~ ${h.close}` : '휴무'}</span>
+              <span>
+                {h ? `${h.open} ~ ${h.close}` : '휴무'}
+                {h?.breakStart && (
+                  <span className="ml-1.5 text-amber-500">{`브레이크 ${h.breakStart}~${h.breakEnd}`}</span>
+                )}
+              </span>
               {isToday && <span className="text-[10px] text-[#1B4332]">오늘</span>}
             </div>
           )

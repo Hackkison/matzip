@@ -17,7 +17,9 @@ function fromBusinessHours(hours: BusinessHours | null): HoursInput {
   const result = { ...DEFAULT_HOURS }
   for (const day of Object.keys(hours) as DayKey[]) {
     const h = hours[day]
-    result[day] = h ? { open: h.open, close: h.close, closed: false } : { open: '11:00', close: '21:00', closed: true }
+    result[day] = h
+      ? { open: h.open, close: h.close, closed: false, hasBreak: !!(h.breakStart && h.breakEnd), breakStart: h.breakStart ?? '15:00', breakEnd: h.breakEnd ?? '17:00' }
+      : { open: '11:00', close: '21:00', closed: true, hasBreak: false, breakStart: '15:00', breakEnd: '17:00' }
   }
   return result
 }
