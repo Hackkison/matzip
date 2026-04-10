@@ -231,7 +231,7 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
       svg.removeEventListener('touchmove', onTouchMove)
       svg.removeEventListener('touchend', onTouchEnd)
     }
-  }, [viewMode])
+  }, [viewMode, loading])
 
   const getCodes = (m: MunicipalityShape) => m.subCodes ?? [m.code]
   const isItemSelected = (m: MunicipalityShape) => getCodes(m).some((c) => selected.has(c))
