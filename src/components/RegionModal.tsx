@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { geoMercator, geoPath } from 'd3-geo'
 import { X } from 'lucide-react'
 
@@ -35,6 +35,15 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
   const [hovered, setHovered] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [confirming, setConfirming] = useState(false)
+
+  // 핀치줌/패닝 상태
+  const svgRef = useRef<SVGSVGElement>(null)
+  const [mapTransform, setMapTransform] = useState({ scale: 1, tx: 0, ty: 0 })
+  const gestureRef = useRef({
+    transform: { scale: 1, tx: 0, ty: 0 },
+    startTouches: [] as { x: number; y: number }[],
+    startTransform: { scale: 1, tx: 0, ty: 0 },
+  })
 
   // 모달 열린 동안 배경 스크롤 방지
   useEffect(() => {
@@ -139,6 +148,10 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
 
         setMunicipalities(merged)
         setLoading(false)
+        // 시/도 변경 시 줌 초기화
+        const reset = { scale: 1, tx: 0, ty: 0 }
+        gestureRef.current.transform = reset
+        setMapTransform(reset)
 
         // 지도 로드 완료 즉시 전체 지역 URL로 prefetch 시작
         // 유저가 선택하기 전부터 서버가 데이터를 미리 준비
@@ -151,6 +164,74 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
   // onPrefetch는 의존성에서 제외 — 함수 참조 변경 시 불필요한 재실행 방지
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provinceCode])
+
+  // 터치 이벤트: passive:false 필요 → useEffect로 직접 등록
+  useEffect(() => {
+    if (viewMode !== 'map') return
+    const svg = svgRef.current
+    if (!svg) return
+
+    const onTouchStart = (e: TouchEvent) => {
+      gestureRef.current.startTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }))
+      gestureRef.current.startTransform = { ...gestureRef.current.transform }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      const { startTouches, startTransform } = gestureRef.current
+      const rect = svg.getBoundingClientRect()
+
+      if (e.touches.length === 2 && startTouches.length === 2) {
+        const t1 = e.touches[0], t2 = e.touches[1]
+        const s1 = startTouches[0], s2 = startTouches[1]
+        const startDist = Math.hypot(s2.x - s1.x, s2.y - s1.y)
+        const curDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY)
+        if (startDist === 0) return
+
+        const newScale = Math.min(8, Math.max(1, startTransform.scale * (curDist / startDist)))
+        const startMidX = (s1.x + s2.x) / 2
+        const startMidY = (s1.y + s2.y) / 2
+        const svgMidX = (startMidX - rect.left) / rect.width * WIDTH
+        const svgMidY = (startMidY - rect.top) / rect.height * HEIGHT
+        const ratio = newScale / startTransform.scale
+        const newTx = svgMidX - ratio * (svgMidX - startTransform.tx)
+        const newTy = svgMidY - ratio * (svgMidY - startTransform.ty)
+
+        const next = newScale <= 1
+          ? { scale: 1, tx: 0, ty: 0 }
+          : { scale: newScale, tx: newTx, ty: newTy }
+        gestureRef.current.transform = next
+        setMapTransform(next)
+      } else if (e.touches.length === 1 && startTouches.length >= 1 && startTransform.scale > 1.01) {
+        const dx = (e.touches[0].clientX - startTouches[0].x) / rect.width * WIDTH
+        const dy = (e.touches[0].clientY - startTouches[0].y) / rect.height * HEIGHT
+        const next = { scale: startTransform.scale, tx: startTransform.tx + dx, ty: startTransform.ty + dy }
+        gestureRef.current.transform = next
+        setMapTransform(next)
+      }
+    }
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (gestureRef.current.transform.scale < 1.1) {
+        const reset = { scale: 1, tx: 0, ty: 0 }
+        gestureRef.current.transform = reset
+        setMapTransform(reset)
+      }
+      if (e.touches.length > 0) {
+        gestureRef.current.startTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }))
+        gestureRef.current.startTransform = { ...gestureRef.current.transform }
+      }
+    }
+
+    svg.addEventListener('touchstart', onTouchStart, { passive: true })
+    svg.addEventListener('touchmove', onTouchMove, { passive: false })
+    svg.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      svg.removeEventListener('touchstart', onTouchStart)
+      svg.removeEventListener('touchmove', onTouchMove)
+      svg.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [viewMode])
 
   const getCodes = (m: MunicipalityShape) => m.subCodes ?? [m.code]
   const isItemSelected = (m: MunicipalityShape) => getCodes(m).some((c) => selected.has(c))
@@ -239,82 +320,86 @@ export default function RegionModal({ provinceCode, provinceName, onClose, onCon
             </div>
           ) : viewMode === 'map' ? (
             <svg
+              ref={svgRef}
               viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
               className="w-full p-2 select-none"
               overflow="visible"
+              style={{ touchAction: 'none' }}
             >
-              {/* 울릉도 인셋 박스 테두리 */}
-              {provinceCode === '37' && (
-                <rect
-                  x={INSET.x - 2}
-                  y={INSET.y - 2}
-                  width={INSET.w + 4}
-                  height={INSET.h + 4}
-                  fill="white"
-                  stroke="#aaa"
-                  strokeWidth={1}
-                  rx={3}
-                />
-              )}
-              {/* 1패스: path 전체 먼저 렌더 */}
-              {municipalities.map((m) => {
-                const isSelected = isItemSelected(m)
-                const isHovered = hovered === m.code
-                return (
-                  <g
-                    key={m.code}
-                    transform={m.offsetX !== undefined ? `translate(${m.offsetX}, ${m.offsetY})` : undefined}
-                  >
-                    {m.offsetX !== undefined && (
-                      <rect
-                        x={0}
-                        y={0}
-                        width={INSET.w}
-                        height={INSET.h}
-                        fill={isSelected ? '#1B4332' : isHovered ? '#a3b8a8' : 'transparent'}
-                        className="cursor-pointer"
+              <g transform={`translate(${mapTransform.tx} ${mapTransform.ty}) scale(${mapTransform.scale})`}>
+                {/* 울릉도 인셋 박스 테두리 */}
+                {provinceCode === '37' && (
+                  <rect
+                    x={INSET.x - 2}
+                    y={INSET.y - 2}
+                    width={INSET.w + 4}
+                    height={INSET.h + 4}
+                    fill="white"
+                    stroke="#aaa"
+                    strokeWidth={1 / mapTransform.scale}
+                    rx={3}
+                  />
+                )}
+                {/* 1패스: path 전체 먼저 렌더 */}
+                {municipalities.map((m) => {
+                  const isSelected = isItemSelected(m)
+                  const isHovered = hovered === m.code
+                  return (
+                    <g
+                      key={m.code}
+                      transform={m.offsetX !== undefined ? `translate(${m.offsetX}, ${m.offsetY})` : undefined}
+                    >
+                      {m.offsetX !== undefined && (
+                        <rect
+                          x={0}
+                          y={0}
+                          width={INSET.w}
+                          height={INSET.h}
+                          fill={isSelected ? '#1B4332' : isHovered ? '#a3b8a8' : 'transparent'}
+                          className="cursor-pointer"
+                          onMouseEnter={() => setHovered(m.code)}
+                          onMouseLeave={() => setHovered(null)}
+                          onClick={() => toggle(m.code)}
+                        />
+                      )}
+                      <path
+                        d={m.path}
+                        fill={isSelected ? '#1B4332' : isHovered ? '#a3b8a8' : '#e5e5e5'}
+                        stroke="white"
+                        strokeWidth={1 / mapTransform.scale}
+                        className="cursor-pointer transition-colors duration-75"
                         onMouseEnter={() => setHovered(m.code)}
                         onMouseLeave={() => setHovered(null)}
                         onClick={() => toggle(m.code)}
                       />
-                    )}
-                    <path
-                      d={m.path}
-                      fill={isSelected ? '#1B4332' : isHovered ? '#a3b8a8' : '#e5e5e5'}
-                      stroke="white"
-                      strokeWidth={1}
-                      className="cursor-pointer transition-colors duration-75"
-                      onMouseEnter={() => setHovered(m.code)}
-                      onMouseLeave={() => setHovered(null)}
-                      onClick={() => toggle(m.code)}
-                    />
-                  </g>
-                )
-              })}
-              {/* 2패스: text 전체를 path 위에 렌더 */}
-              {municipalities.map((m) => {
-                const isSelected = isItemSelected(m)
-                const isInset = m.offsetX !== undefined
-                // 면적 기반 폰트 크기 (너무 작은 지역은 숨김)
-                const area = m.area ?? 999
-                if (!isInset && area < 80) return null
-                const fontSize = isInset ? 9 : area < 300 ? 7 : area < 800 ? 8 : 9
-                return (
-                  <text
-                    key={m.code}
-                    x={(m.offsetX ?? 0) + (isInset ? INSET.w / 2 : m.centroidX)}
-                    y={(m.offsetY ?? 0) + (isInset ? INSET.h - 10 : m.centroidY)}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fontSize={fontSize}
-                    fontWeight="500"
-                    fill={isSelected ? 'white' : '#444'}
-                    className="pointer-events-none"
-                  >
-                    {m.name}
-                  </text>
-                )
-              })}
+                    </g>
+                  )
+                })}
+                {/* 2패스: text 전체를 path 위에 렌더 */}
+                {municipalities.map((m) => {
+                  const isSelected = isItemSelected(m)
+                  const isInset = m.offsetX !== undefined
+                  const area = m.area ?? 999
+                  // 줌인 시 작은 지역 레이블도 표시
+                  if (!isInset && area < 80 && mapTransform.scale < 2) return null
+                  const fontSize = isInset ? 9 : area < 300 ? 7 : area < 800 ? 8 : 9
+                  return (
+                    <text
+                      key={m.code}
+                      x={(m.offsetX ?? 0) + (isInset ? INSET.w / 2 : m.centroidX)}
+                      y={(m.offsetY ?? 0) + (isInset ? INSET.h - 10 : m.centroidY)}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fontSize={fontSize}
+                      fontWeight="500"
+                      fill={isSelected ? 'white' : '#444'}
+                      className="pointer-events-none"
+                    >
+                      {m.name}
+                    </text>
+                  )
+                })}
+              </g>
             </svg>
           ) : (
             <div className="px-4 py-4 flex flex-wrap gap-2">
