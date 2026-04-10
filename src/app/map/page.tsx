@@ -21,13 +21,13 @@ export default async function MapPage() {
       .select('id, name, category, image_url')
       .order('created_at', { ascending: false })
       .limit(6),
-    // 최근 맛집 6개의 리뷰 사진 (식당 대표 사진 없을 때 폴백)
+    // 리뷰 사진 + 좋아요 수 (식당별 최다 좋아요 리뷰 사진을 썸네일로)
     supabase
       .from('reviews')
-      .select('restaurant_id, image_urls')
+      .select('restaurant_id, image_urls, review_likes(user_id)')
       .not('image_urls', 'is', null)
       .order('created_at', { ascending: false })
-      .limit(30),
+      .limit(60),
     user
       ? supabase.from('favorites').select('restaurant_id').eq('user_id', user.id)
       : Promise.resolve({ data: [], error: null }),
@@ -35,11 +35,16 @@ export default async function MapPage() {
 
   const favoritedIds = new Set((favData ?? []).map((f) => f.restaurant_id))
 
-  // 리뷰 썸네일 맵 (식당별 첫 번째 리뷰 사진)
+  // 식당별 좋아요 최다 리뷰의 첫 번째 사진을 썸네일로 선정 (동점 시 최신 우선)
   const reviewThumbnails: Record<string, string> = {}
+  const maxLikes: Record<string, number> = {}
   for (const rv of (recentReviews ?? [])) {
-    if (!reviewThumbnails[rv.restaurant_id] && rv.image_urls?.[0]) {
+    if (!rv.image_urls?.[0]) continue
+    const likeCount = Array.isArray(rv.review_likes) ? rv.review_likes.length : 0
+    const existing = maxLikes[rv.restaurant_id]
+    if (existing === undefined || likeCount > existing) {
       reviewThumbnails[rv.restaurant_id] = rv.image_urls[0]
+      maxLikes[rv.restaurant_id] = likeCount
     }
   }
 
