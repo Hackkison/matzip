@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Script from 'next/script'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { LocateFixed } from 'lucide-react'
 
@@ -18,6 +17,16 @@ interface Place {
   place_url: string
 }
 
+interface ManualRestaurant {
+  id: string
+  name: string
+  address: string
+  phone: string | null
+  lat: number
+  lng: number
+  category: string
+}
+
 declare global {
   interface Window {
     kakao: {
@@ -26,6 +35,8 @@ declare global {
         Map: new (container: HTMLElement, options: object) => KakaoMap
         LatLng: new (lat: number, lng: number) => object
         Marker: new (options: object) => KakaoMarker
+        MarkerImage: new (src: string, size: object) => object
+        Size: new (width: number, height: number) => object
         InfoWindow: new (options: object) => KakaoInfoWindow
         event: {
           addListener: (target: object, type: string, handler: () => void) => void
@@ -57,31 +68,38 @@ interface KakaoInfoWindow {
   close: () => void
 }
 
+// 리뷰 있는 맛집용 녹색 SVG 마커 이미지 URL 생성
+function createReviewMarkerImage(): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38">
+    <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 24 14 24S28 24.5 28 14C28 6.27 21.73 0 14 0z" fill="#1B4332"/>
+    <circle cx="14" cy="14" r="6" fill="white"/>
+    <circle cx="14" cy="14" r="3" fill="#1B4332"/>
+  </svg>`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
+const REVIEW_MARKER_SRC = createReviewMarkerImage()
+const REVIEW_MARKER_SIZE = { width: 28, height: 38 }
+
 export default function KakaoMapView() {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<KakaoMap | null>(null)
   const markersRef = useRef<KakaoMarker[]>([])
+  const manualMarkersRef = useRef<KakaoMarker[]>([])
+  const myMarkerRef = useRef<KakaoMarker | null>(null)
   const infoWindowRef = useRef<KakaoInfoWindow | null>(null)
-  interface ManualRestaurant {
-    id: string
-    name: string
-    address: string
-    phone: string | null
-    lat: number
-    lng: number
-    category: string
-  }
 
   const [places, setPlaces] = useState<Place[]>([])
   const [manualRestaurants, setManualRestaurants] = useState<ManualRestaurant[]>([])
+  // kakao_id → 우리 DB restaurant id 매핑 (상태로 관리하여 마커 타이밍 보장)
+  const [registeredMap, setRegisteredMap] = useState<Map<string, string>>(new Map())
+  // 리뷰가 1개 이상 있는 restaurant id 집합
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [sdkReady, setSdkReady] = useState(false)
   const [gpsError, setGpsError] = useState(false)
-  const myMarkerRef = useRef<KakaoMarker | null>(null)
-  const manualMarkersRef = useRef<KakaoMarker[]>([])
+
   const supabase = createClient()
-  // kakao_id → 우리 DB restaurant id 매핑
-  const registeredRef = useRef<Map<string, string>>(new Map())
 
   const searchInBounds = useCallback(async () => {
     if (!mapInstanceRef.current) return
@@ -107,21 +125,38 @@ export default function KakaoMapView() {
       ])
 
       const docs: Place[] = kakaoRes.documents ?? []
+      const manualList: ManualRestaurant[] = (manualRes.data ?? []) as ManualRestaurant[]
+
       setPlaces(docs)
-      setManualRestaurants((manualRes.data ?? []) as ManualRestaurant[])
+      setManualRestaurants(manualList)
 
       // 우리 DB에 등록된 카카오 식당 조회
+      let newRegisteredMap = new Map<string, string>()
       if (docs.length > 0) {
         const kakaoIds = docs.map((d: Place) => d.id)
         const { data: registered } = await supabase
           .from('restaurants')
           .select('id, kakao_id')
           .in('kakao_id', kakaoIds)
-        const map = new Map<string, string>()
         for (const r of registered ?? []) {
-          if (r.kakao_id) map.set(r.kakao_id, r.id)
+          if (r.kakao_id) newRegisteredMap.set(r.kakao_id, r.id)
         }
-        registeredRef.current = map
+      }
+      setRegisteredMap(newRegisteredMap)
+
+      // 리뷰 있는 맛집 조회 (카카오 등록 + 직접 등록 모두 포함)
+      const allRestaurantIds = [
+        ...newRegisteredMap.values(),
+        ...manualList.map(r => r.id),
+      ]
+      if (allRestaurantIds.length > 0) {
+        const { data: withReviews } = await supabase
+          .from('reviews')
+          .select('restaurant_id')
+          .in('restaurant_id', allRestaurantIds)
+        setReviewedIds(new Set(withReviews?.map(r => r.restaurant_id) ?? []))
+      } else {
+        setReviewedIds(new Set())
       }
     } finally {
       setLoading(false)
@@ -177,7 +212,7 @@ export default function KakaoMapView() {
     })
   }, [searchInBounds, moveToMyLocation])
 
-  // 마커 업데이트
+  // 카카오 API 검색 결과 마커 업데이트
   useEffect(() => {
     if (!mapInstanceRef.current || !window.kakao?.maps) return
 
@@ -187,16 +222,38 @@ export default function KakaoMapView() {
     if (infoWindowRef.current) infoWindowRef.current.close()
 
     places.forEach(place => {
-      const marker = new window.kakao.maps.Marker({
+      const restaurantId = registeredMap.get(place.id)
+      const hasReview = restaurantId ? reviewedIds.has(restaurantId) : false
+
+      // 리뷰 있는 맛집은 녹색 커스텀 마커 사용
+      const markerOptions: Record<string, unknown> = {
         map: mapInstanceRef.current!,
         position: new window.kakao.maps.LatLng(parseFloat(place.y), parseFloat(place.x)),
         title: place.place_name,
-      })
+      }
+      if (hasReview) {
+        markerOptions.image = new window.kakao.maps.MarkerImage(
+          REVIEW_MARKER_SRC,
+          new window.kakao.maps.Size(REVIEW_MARKER_SIZE.width, REVIEW_MARKER_SIZE.height)
+        )
+      }
 
-      const restaurantId = registeredRef.current.get(place.id)
+      const marker = new window.kakao.maps.Marker(markerOptions)
+
+      // 카카오 가게 정보를 URL 파라미터로 전달하여 등록 페이지에서 자동 선택
+      const registerParams = new URLSearchParams({
+        p_id: place.id,
+        p_name: place.place_name,
+        p_address: place.address_name,
+        p_road: place.road_address_name,
+        p_phone: place.phone,
+        p_category: place.category_name,
+        p_x: place.x,
+        p_y: place.y,
+      })
       const appLink = restaurantId
         ? `<a href="/restaurants/${restaurantId}" style="display:block;margin-top:6px;padding:4px 8px;background:#1B4332;color:#fff;font-size:11px;font-weight:600;border-radius:6px;text-align:center;text-decoration:none">리뷰 보러가기</a>`
-        : `<a href="/restaurants/register" style="display:block;margin-top:6px;padding:4px 8px;background:#f5f5f5;color:#52525b;font-size:11px;border-radius:6px;text-align:center;text-decoration:none">맛집 등록하기</a>`
+        : `<a href="/restaurants/register?${registerParams.toString()}" style="display:block;margin-top:6px;padding:4px 8px;background:#f5f5f5;color:#52525b;font-size:11px;border-radius:6px;text-align:center;text-decoration:none">맛집 등록하기</a>`
 
       const content = `
         <div style="padding:10px 14px;min-width:160px;font-family:inherit">
@@ -217,9 +274,9 @@ export default function KakaoMapView() {
 
       markersRef.current.push(marker)
     })
-  }, [places])
+  }, [places, registeredMap, reviewedIds])
 
-  // 직접 등록 맛집 마커
+  // 직접 등록 맛집 마커 업데이트
   useEffect(() => {
     if (!mapInstanceRef.current || !window.kakao?.maps) return
 
@@ -227,11 +284,24 @@ export default function KakaoMapView() {
     manualMarkersRef.current = []
 
     manualRestaurants.forEach(r => {
-      const marker = new window.kakao.maps.Marker({
+      const hasReview = reviewedIds.has(r.id)
+
+      // 직접 등록 맛집은 항상 커스텀 마커 (리뷰 유무로 색상 구분)
+      const markerImage = new window.kakao.maps.MarkerImage(
+        REVIEW_MARKER_SRC,
+        new window.kakao.maps.Size(REVIEW_MARKER_SIZE.width, REVIEW_MARKER_SIZE.height)
+      )
+      // 리뷰 없으면 기본 마커로 대체 (직접 등록 맛집은 항상 녹색 핀 유지)
+      const markerOptions: Record<string, unknown> = {
         map: mapInstanceRef.current!,
         position: new window.kakao.maps.LatLng(r.lat, r.lng),
         title: r.name,
-      })
+        image: hasReview ? markerImage : undefined,
+      }
+      // image가 undefined면 기본 마커로 렌더링됨
+      if (!hasReview) delete markerOptions.image
+
+      const marker = new window.kakao.maps.Marker(markerOptions)
 
       const content = `
         <div style="padding:10px 14px;min-width:160px;font-family:inherit">
@@ -251,7 +321,7 @@ export default function KakaoMapView() {
 
       manualMarkersRef.current.push(marker)
     })
-  }, [manualRestaurants])
+  }, [manualRestaurants, reviewedIds])
 
   useEffect(() => {
     if (sdkReady) initMap()
@@ -272,6 +342,17 @@ export default function KakaoMapView() {
             : places.length > 0 && <p className="text-xs text-zinc-400">음식점 {places.length}개</p>
           }
         </div>
+        {/* 마커 범례 */}
+        <div className="flex items-center gap-3 text-[10px] text-zinc-500">
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-3 h-3 rounded-full bg-[#1B4332]" />
+            리뷰 있음
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-3 h-3 rounded-full bg-[#3C8FE8]" />
+            미등록
+          </span>
+        </div>
         <button
           onClick={requestGps}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 text-xs text-zinc-600 hover:border-[#1B4332] hover:text-[#1B4332] transition-colors"
@@ -288,7 +369,7 @@ export default function KakaoMapView() {
 
       <div ref={mapRef} className="flex-1 w-full" style={{ touchAction: 'none' }} />
 
-      {/* 하단 목록 (최대 5개 미리보기) */}
+      {/* 하단 목록 (최대 8개 미리보기) */}
       {places.length > 0 && (
         <div className="shrink-0 border-t border-zinc-100 overflow-x-auto">
           <div className="flex gap-3 px-4 py-3">

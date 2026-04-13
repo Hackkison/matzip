@@ -1,15 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search, Heart, Navigation, LogIn } from 'lucide-react'
+import { Search, Heart, Navigation, LogIn, Headphones } from 'lucide-react'
 import { getCategoryStyle } from '@/lib/category'
 
 const KoreaMap = dynamic(() => import('@/components/KoreaMap'), { ssr: false })
 const RegionModal = dynamic(() => import('@/components/RegionModal'), { ssr: false })
+const InquiryModal = dynamic(() => import('@/components/InquiryModal'), { ssr: false })
 
 const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '디저트', '기타']
 const CATEGORY_EMOJI: Record<string, string> = {
@@ -42,6 +43,70 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
   const [modal, setModal] = useState<{ code: string; name: string } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState('전체')
+  const [showInquiry, setShowInquiry] = useState(false)
+
+  // 실시간 검색 상태
+  interface SearchResult { id: string; name: string; category: string; address: string; road_address: string | null }
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [searching, setSearching] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const formRef = useRef<HTMLFormElement>(null)
+  // 현재 위치 캐시 (검색 필터에 활용, 실패해도 무시)
+  const geoRef = useRef<{ lat: number; lng: number } | null>(null)
+
+  // 마운트 시 GPS 조용히 취득
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { geoRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude } },
+      () => {}, // 실패 시 무시 → 위치 필터 없이 전국 검색
+      { timeout: 5000 }
+    )
+  }, [])
+
+  // 입력 변경 시 디바운스 검색 (현재 위치 기준)
+  useEffect(() => {
+    clearTimeout(debounceRef.current)
+    if (searchQuery.trim().length < 1) {
+      setSearchResults([])
+      setShowDropdown(false)
+      return
+    }
+    setSearching(true)
+    debounceRef.current = setTimeout(async () => {
+      const params = new URLSearchParams({ q: searchQuery.trim() })
+      if (geoRef.current) {
+        params.set('lat', String(geoRef.current.lat))
+        params.set('lng', String(geoRef.current.lng))
+      }
+      try {
+        const res = await fetch(`/api/restaurants/search?${params.toString()}`)
+        const data = await res.json()
+        setSearchResults(data)
+        setShowDropdown(true)
+      } finally {
+        setSearching(false)
+      }
+    }, 250)
+    return () => clearTimeout(debounceRef.current)
+  }, [searchQuery])
+
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (formRef.current && !formRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  const handleResultClick = useCallback(() => {
+    setShowDropdown(false)
+    setSearchQuery('')
+  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,34 +148,87 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
             안녕하세요 👋{' '}
             <span className="text-emerald-300">{nickname ?? '맛집러'}님</span>
           </p>
-          {!isLoggedIn && (
-            <Link
-              href="/login"
-              className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 border border-white/30 rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+          <div className="flex items-center gap-2">
+            {!isLoggedIn && (
+              <Link
+                href="/login"
+                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 border border-white/30 rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+              >
+                <LogIn size={12} />
+                로그인
+              </Link>
+            )}
+            <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+              <span className="text-xs font-semibold text-emerald-100">{restaurantCount}개 맛집</span>
+            </div>
+            <button
+              onClick={() => setShowInquiry(true)}
+              className="flex items-center gap-1 bg-white/15 hover:bg-white/25 rounded-full px-3 py-1.5 text-xs font-semibold text-white/80 transition-colors"
+              title="고객센터"
             >
-              <LogIn size={12} />
-              로그인
-            </Link>
-          )}
-          <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
-            <span className="text-xs font-semibold text-emerald-100">{restaurantCount}개 맛집</span>
+              <Headphones size={12} />
+              고객센터
+            </button>
           </div>
         </div>
         <div className="flex gap-2">
-          <form onSubmit={handleSearch} className="flex-1">
+          <form ref={formRef} onSubmit={handleSearch} className="flex-1 relative">
             <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3.5 py-2.5">
               <Search size={15} className="text-white/50 shrink-0" />
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => { if (searchResults.length > 0) setShowDropdown(true) }}
                 placeholder="맛집 이름, 지역으로 검색"
                 inputMode="search"
                 autoComplete="off"
                 className="flex-1 bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
               />
+              {searching && (
+                <div className="w-3 h-3 border-2 border-white/30 border-t-white/70 rounded-full animate-spin shrink-0" />
+              )}
             </div>
+
+            {/* 실시간 검색 드롭다운 */}
+            {showDropdown && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl shadow-xl overflow-hidden z-50 border border-zinc-100">
+                {searchResults.length === 0 ? (
+                  <p className="text-xs text-zinc-400 px-4 py-3 text-center">검색 결과가 없어요</p>
+                ) : (
+                  <>
+                    {searchResults.map(r => {
+                      const { bg, text } = getCategoryStyle(r.category)
+                      return (
+                        <Link
+                          key={r.id}
+                          href={`/restaurants/${r.id}`}
+                          onClick={handleResultClick}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 border-b border-zinc-50 last:border-0 transition-colors"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-zinc-800 truncate">{r.name}</p>
+                            <p className="text-xs text-zinc-400 truncate mt-0.5">
+                              {r.road_address || r.address}
+                            </p>
+                          </div>
+                          <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${bg} ${text}`}>
+                            {r.category}
+                          </span>
+                        </Link>
+                      )
+                    })}
+                    <button
+                      type="submit"
+                      className="w-full px-4 py-2.5 text-xs text-[#1B4332] font-medium hover:bg-zinc-50 border-t border-zinc-100 text-center"
+                    >
+                      "{searchQuery}" 전체 검색 결과 보기 →
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </form>
           {/* 주변 맛집 바로가기 */}
           <Link
@@ -229,6 +347,13 @@ export default function MapClient({ nickname, restaurantCount, recentRestaurants
           onClose={() => setModal(null)}
           onConfirm={handleConfirm}
           onPrefetch={handlePrefetch}
+        />
+      )}
+
+      {showInquiry && (
+        <InquiryModal
+          isLoggedIn={isLoggedIn}
+          onClose={() => setShowInquiry(false)}
         />
       )}
     </div>

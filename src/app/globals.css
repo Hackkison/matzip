@@ -117,6 +117,16 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* 야간모드: invert + hue-rotate로 밝은 화면을 어둡게 전환 */
+html.dark body {
+  filter: invert(1) hue-rotate(180deg);
+}
+/* 사진/영상은 이중 반전하여 원래 색상 유지 */
+html.dark img,
+html.dark video {
+  filter: invert(1) hue-rotate(180deg);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

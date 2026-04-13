@@ -54,18 +54,19 @@ function extractRegionKeyword(regionNames: string): string {
 interface Props {
   regionCodes: string
   regionNames: string
+  prefilledPlace?: KakaoPlace
 }
 
-export default function RestaurantRegisterForm({ regionCodes, regionNames }: Props) {
+export default function RestaurantRegisterForm({ regionCodes, regionNames, prefilledPlace }: Props) {
   const router = useRouter()
   const supabase = createClient()
   const regionKeyword = extractRegionKeyword(regionNames)
 
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(prefilledPlace?.place_name ?? '')
   const [suggestions, setSuggestions] = useState<KakaoPlace[]>([])
   const [loading, setLoading] = useState(false)
-  const [selected, setSelected] = useState<KakaoPlace | null>(null)
-  const [category, setCategory] = useState('')
+  const [selected, setSelected] = useState<KakaoPlace | null>(prefilledPlace ?? null)
+  const [category, setCategory] = useState(prefilledPlace ? mapCategory(prefilledPlace.category_name) : '')
   const [submitting, setSubmitting] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [error, setError] = useState('')
@@ -83,8 +84,21 @@ export default function RestaurantRegisterForm({ regionCodes, regionNames }: Pro
   const [manualPhone, setManualPhone] = useState('')
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const isSelected = useRef(false)
+  // 카카오맵에서 넘어온 경우 처음부터 선택 완료 상태로 시작
+  const isSelected = useRef(!!prefilledPlace)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // 카카오맵에서 넘어온 가게의 중복 등록 여부 확인
+  useEffect(() => {
+    if (!prefilledPlace) return
+    supabase
+      .from('restaurants')
+      .select('id')
+      .eq('kakao_id', prefilledPlace.id)
+      .single()
+      .then(({ data }) => { if (data) setDuplicateId(data.id) })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (isSelected.current) return

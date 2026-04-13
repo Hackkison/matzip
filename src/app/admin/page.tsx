@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Star, Flag } from 'lucide-react'
+import { ChevronLeft, Star, Flag, Headphones } from 'lucide-react'
 import AdminDeleteButton from '@/components/AdminDeleteButton'
 import AdminRequestActions from '@/components/AdminRequestActions'
+import AdminInquiryReply from '@/components/AdminInquiryReply'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -20,7 +22,13 @@ export default async function AdminPage() {
   // 관리자가 아니면 메인으로 이동
   if (!profile?.is_admin) redirect('/map')
 
-  const [{ data: restaurants }, { data: reviews }, { data: requests }] = await Promise.all([
+  // 서비스 롤로 전체 문의 조회 (RLS 우회)
+  const serviceClient = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const [{ data: restaurants }, { data: reviews }, { data: requests }, { data: inquiries }] = await Promise.all([
     supabase
       .from('restaurants')
       .select('id, name, category, road_address, address, created_at, profiles(name)')
@@ -33,6 +41,10 @@ export default async function AdminPage() {
       .from('review_delete_requests')
       .select('id, reason, created_at, status, requester_id, reviews(id, content, rating, restaurant_id, restaurants(name))')
       .eq('status', 'pending')
+      .order('created_at', { ascending: false }),
+    serviceClient
+      .from('inquiries')
+      .select('id, type, title, content, created_at, admin_reply, replied_at, user_id')
       .order('created_at', { ascending: false }),
   ])
 
@@ -199,6 +211,51 @@ export default async function AdminPage() {
                   </div>
                 )
               })}
+            </div>
+          )}
+        </section>
+
+        {/* 고객센터 문의 */}
+        <section>
+          <h2 className="text-sm font-semibold text-zinc-800 mb-3 flex items-center gap-2">
+            <Headphones size={14} className="text-[#1B4332]" />
+            고객센터 문의 ({inquiries?.length ?? 0})
+          </h2>
+          {!inquiries || inquiries.length === 0 ? (
+            <p className="text-sm text-zinc-400 text-center py-4">접수된 문의가 없어요</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {inquiries.map(inq => (
+                <div
+                  key={inq.id}
+                  className="px-3 py-3 border border-zinc-100 rounded-lg"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                      inq.type === 'bug' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'
+                    }`}>
+                      {inq.type === 'bug' ? '오류 신고' : '건의사항'}
+                    </span>
+                    <span className="text-xs text-zinc-400">
+                      {new Date(inq.created_at).toLocaleDateString('ko-KR')}
+                    </span>
+                    {inq.admin_reply && (
+                      <span className="ml-auto text-[10px] font-semibold text-[#1B4332] bg-[#1B4332]/10 px-1.5 py-0.5 rounded-full">
+                        답변 완료
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium text-zinc-800 mb-0.5">{inq.title}</p>
+                  <p className="text-xs text-zinc-500 whitespace-pre-line">{inq.content}</p>
+                  {inq.admin_reply && (
+                    <div className="mt-2 bg-[#1B4332]/5 rounded-lg px-3 py-2">
+                      <p className="text-[10px] font-semibold text-[#1B4332] mb-0.5">기존 답변</p>
+                      <p className="text-xs text-zinc-600">{inq.admin_reply}</p>
+                    </div>
+                  )}
+                  <AdminInquiryReply inquiryId={inq.id} existingReply={inq.admin_reply ?? null} />
+                </div>
+              ))}
             </div>
           )}
         </section>

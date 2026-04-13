@@ -36,7 +36,12 @@ export default function RootLayout({
     <html
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      {/* 야간모드 플래시 방지: 렌더 전 localStorage 확인 */}
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(localStorage.getItem('matzip_dark')==='1')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
+      </head>
       <body className="min-h-full flex flex-col pb-16">
         {children}
         <BottomNavWrapper />

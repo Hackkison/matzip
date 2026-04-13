@@ -28,6 +28,18 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      // 닉네임 미설정 사용자(소셜 최초 로그인 등)는 프로필 설정으로 이동
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single()
+        if (!profile?.name) {
+          return NextResponse.redirect(`${origin}/profile/setup`)
+        }
+      }
       return NextResponse.redirect(`${origin}${next}`)
     }
   }
