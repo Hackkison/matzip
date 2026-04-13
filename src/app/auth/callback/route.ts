@@ -28,15 +28,12 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      // 닉네임 미설정 사용자(소셜 최초 로그인 등)는 프로필 설정으로 이동
+      // 최초 소셜 로그인 사용자는 닉네임 설정으로 이동
+      // (트리거가 name을 자동 설정하므로 name 체크 대신 계정 생성 시각으로 판단)
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', user.id)
-          .single()
-        if (!profile?.name) {
+        const isNewUser = (Date.now() - new Date(user.created_at).getTime()) < 60_000
+        if (isNewUser) {
           return NextResponse.redirect(`${origin}/profile/setup`)
         }
       }

@@ -6,6 +6,7 @@ import LogoutButton from '@/components/logout-button'
 import DeleteAccountButton from '@/components/DeleteAccountButton'
 import DarkModeToggle from '@/components/DarkModeToggle'
 import PasswordChangeForm from '@/components/PasswordChangeForm'
+import LinkGoogleButton from '@/components/LinkGoogleButton'
 
 export default async function MyPage() {
   const supabase = await createClient()
@@ -144,9 +145,12 @@ export default async function MyPage() {
           <h2 className="text-sm font-semibold text-zinc-800 mb-3">설정</h2>
           <div className="flex flex-col gap-2">
             <DarkModeToggle />
-            {/* 이메일 로그인 사용자만 비밀번호 변경 노출 */}
+            {/* 이메일 로그인 사용자만 비밀번호 변경 및 구글 연동 노출 */}
             {user.app_metadata?.provider === 'email' && (
-              <PasswordChangeForm email={user.email!} />
+              <>
+                <PasswordChangeForm email={user.email!} />
+                <LinkGoogleButton />
+              </>
             )}
           </div>
         </section>
