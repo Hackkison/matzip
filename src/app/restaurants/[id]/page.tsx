@@ -11,6 +11,7 @@ import BusinessHoursDisplay from '@/components/BusinessHoursDisplay'
 import BusinessHoursEditor from '@/components/BusinessHoursEditor'
 import AdminPhotoUpload from '@/components/AdminPhotoUpload'
 import AdminPhotoSelect from '@/components/AdminPhotoSelect'
+import MenuSection from '@/components/MenuSection'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -66,13 +67,18 @@ export default async function RestaurantDetailPage({ params }: Props) {
   const { id } = await params
 
   // 공통 조회 (로그인 여부 무관)
-  const [{ data: restaurant }, { data: reviews }] = await Promise.all([
+  const [{ data: restaurant }, { data: reviews }, { data: menus }] = await Promise.all([
     supabase.from('restaurants').select('*').eq('id', id).single(),
     supabase
       .from('reviews')
       .select('id, rating, content, created_at, user_id, image_urls, profiles(name), review_likes(user_id)')
       .eq('restaurant_id', id)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('menus')
+      .select('id, name, price, created_at')
+      .eq('restaurant_id', id)
+      .order('created_at', { ascending: true }),
   ])
 
   if (!restaurant) notFound()
@@ -165,6 +171,14 @@ export default async function RestaurantDetailPage({ params }: Props) {
             />
           </section>
         )}
+
+        {/* 메뉴 */}
+        <MenuSection
+          restaurantId={id}
+          initialMenus={menus ?? []}
+          isLoggedIn={!!user}
+          isAdmin={isAdmin}
+        />
 
         {/* 버튼 영역 */}
         <div className="flex flex-col gap-2">
