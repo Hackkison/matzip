@@ -31,21 +31,30 @@ async function fetchRestaurants(regionNames: string[]) {
     restaurantsQuery,
     supabase
       .from('reviews')
-      .select('restaurant_id, image_urls, review_likes(user_id)')
-      .not('image_urls', 'is', null)
+      .select('restaurant_id, rating, image_urls, review_likes(user_id)')
       .order('created_at', { ascending: false }),
   ])
 
-  // 식당별 좋아요 최다 리뷰의 첫 번째 사진을 썸네일로 선정 (동점 시 최신 우선)
+  // 식당별 평점 집계 + 좋아요 최다 리뷰의 첫 번째 사진을 썸네일로 선정 (동점 시 최신 우선)
+  const ratingSum: Record<string, number> = {}
+  const ratingCount: Record<string, number> = {}
   const reviewThumbnails: Record<string, string> = {}
   const maxLikes: Record<string, number> = {}
+
   for (const review of (reviews ?? [])) {
-    if (!review.image_urls?.[0]) continue
-    const likeCount = Array.isArray(review.review_likes) ? review.review_likes.length : 0
-    const existing = maxLikes[review.restaurant_id]
-    if (existing === undefined || likeCount > existing) {
-      reviewThumbnails[review.restaurant_id] = review.image_urls[0]
-      maxLikes[review.restaurant_id] = likeCount
+    // 평점 집계
+    if (review.rating != null) {
+      ratingSum[review.restaurant_id] = (ratingSum[review.restaurant_id] ?? 0) + review.rating
+      ratingCount[review.restaurant_id] = (ratingCount[review.restaurant_id] ?? 0) + 1
+    }
+    // 썸네일 선정
+    if (review.image_urls?.[0]) {
+      const likeCount = Array.isArray(review.review_likes) ? review.review_likes.length : 0
+      const existing = maxLikes[review.restaurant_id]
+      if (existing === undefined || likeCount > existing) {
+        reviewThumbnails[review.restaurant_id] = review.image_urls[0]
+        maxLikes[review.restaurant_id] = likeCount
+      }
     }
   }
 
@@ -54,6 +63,8 @@ async function fetchRestaurants(regionNames: string[]) {
     thumbnail_url: r.image_url ?? reviewThumbnails[r.id] ?? null,
     price_range: r.price_range ?? null,
     business_hours: r.business_hours ?? null,
+    avg_rating: ratingCount[r.id] ? Math.round((ratingSum[r.id] / ratingCount[r.id]) * 10) / 10 : null,
+    review_count: ratingCount[r.id] ?? 0,
   }))
 }
 

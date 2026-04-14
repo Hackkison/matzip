@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, Heart } from 'lucide-react'
+import { MapPin, Heart, Star } from 'lucide-react'
 import { getCategoryStyle } from '@/lib/category'
 
 const PRICE_LABEL: Record<number, string> = {
@@ -19,6 +19,8 @@ interface Restaurant {
   phone: string | null
   thumbnail_url: string | null
   price_range: number | null
+  avg_rating?: number | null
+  review_count?: number
 }
 
 interface Props {
@@ -69,9 +71,20 @@ export default function RestaurantCard({ restaurant, isFavorited = false }: Prop
             </span>
           )}
         </div>
-        <span className={`self-start px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${text}`}>
-          {restaurant.category}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`self-start px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${text}`}>
+            {restaurant.category}
+          </span>
+          {restaurant.avg_rating != null && (
+            <div className="flex items-center gap-0.5 text-xs text-amber-500 font-medium">
+              <Star size={10} fill="#F59E0B" className="shrink-0" />
+              <span>{restaurant.avg_rating.toFixed(1)}</span>
+              {restaurant.review_count != null && restaurant.review_count > 0 && (
+                <span className="text-zinc-400 font-normal ml-0.5">({restaurant.review_count})</span>
+              )}
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-1 text-xs text-zinc-400">
           <MapPin size={10} className="shrink-0" />
           <span className="truncate">{address}</span>

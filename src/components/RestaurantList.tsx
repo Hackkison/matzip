@@ -21,6 +21,8 @@ const SORT_OPTIONS = [
   { value: 'name', label: '이름순' },
   { value: 'price_asc', label: '금액 낮은순' },
   { value: 'price_desc', label: '금액 높은순' },
+  { value: 'rating_desc', label: '별점 높은순' },
+  { value: 'review_count_desc', label: '리뷰 많은순' },
 ]
 
 interface Restaurant {
@@ -33,6 +35,8 @@ interface Restaurant {
   thumbnail_url: string | null
   price_range: number | null
   business_hours: BusinessHours | null
+  avg_rating: number | null
+  review_count: number
 }
 
 interface Props {
@@ -68,6 +72,16 @@ export default function RestaurantList({ restaurants, favoritedIds }: Props) {
       if (a.price_range === null) return 1
       if (b.price_range === null) return -1
       return b.price_range - a.price_range
+    }
+    if (sort === 'rating_desc') {
+      // 리뷰 없는 가게는 맨 뒤로
+      if (a.avg_rating === null && b.avg_rating === null) return 0
+      if (a.avg_rating === null) return 1
+      if (b.avg_rating === null) return -1
+      return b.avg_rating - a.avg_rating
+    }
+    if (sort === 'review_count_desc') {
+      return b.review_count - a.review_count
     }
     return 0 // latest: 서버에서 이미 최신순 정렬됨
   })
